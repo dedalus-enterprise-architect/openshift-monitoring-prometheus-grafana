@@ -12,15 +12,15 @@ This project explain how to Set Up a custom Grafana instance having the followin
 
 * give the RBAC permission to the SA: _grafana-serviceaccount_
 
-    ```oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n dedalus-monitoring```
+    ```oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n <type_here_the_namespace>```
 
 * get the token bearer
 
-    ```oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring```
+    ```oc serviceaccounts get-token grafana-serviceaccount -n <type_here_the_namespace>```
 
 * get the Thanos route
 
-    ```oc get route thanos-querier -n openshift-monitoring -o json | jq .spec.host```
+    ```oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host```
 
 it follows an output example:
 
@@ -87,19 +87,19 @@ The dashboards can be loaded from:
 * any namespace if the scan-all feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/tree/master/deploy/cluster_roles)
 
 
-## Grafana Dashboard Variables
+#### Grafana Dashboard Variables
 
 > Working in progress
 
 
-    projects	    up{namespace!~".*openshift-.*|.*kube-.*"}                           .*namespace="(.*?)".*
+    projects:  	    up{namespace!~".*openshift-.*|.*kube-.*"}                           .*namespace="(.*?)".*
     application	    up{namespace=~"$projects"}                                          .*app="(.*?)".*
     pod             up{app=~"$application",namespace=~"$projects"}                      .*pod="(.*?)".*
-    instance	    up{app=~"$application",pod=~"$pod",namespace=~"$projects"}          .*instance="(.*?)".*
-    instance_http	label_values(http_requests_total{app="$application"}, instance)     .*instance="(.*?)".*
+    instance	      up{app=~"$application",pod=~"$pod",namespace=~"$projects"}          .*instance="(.*?)".*
+    instance_http	label_values(http_requests_total{app="$application"}, instance)       .*instance="(.*?)".*
 
 
-regexp:
+> regexp examples:
 
     .*pod="(.*?)".*instance="(.*?)"
 
@@ -112,3 +112,50 @@ regexp:
     label_values(jvm_memory_bytes_used{app="$application", instance="$instance", area="heap"},id)
 
     jvm_memory_bytes_used{app="$application", instance="$instance", id=~"$jvm_memory_pool_heap"}
+
+### Templates
+
+It follows some optionals command to create all objects as well.
+
+>
+> NOTES: before proceed is necessary making sure the following dashboard selector snippet is already configured within the Grafana instance object:
+>
+
+```
+  dashboardLabelSelector:
+    - matchExpressions:
+        - key: app
+          operator: In
+          values:
+            - grafana
+```
+
+* Passing the parameters inline:
+
+      oc process -f dashboard.template.yml \
+        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n **<type_here_the_namespace>**)" \
+        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
+        | oc -n **<type_here_the_namespace>** create -f -
+
+
+  where it follows a final command afterward the paramaters was replaced:
+
+      oc process -f dashboard.template.yml \
+        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n openshift-monitoring-dedalus)" \
+        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
+        | oc -n openshift-monitoring-dedalus create -f -
+
+* Passing the parameters by an env file as input:
+
+      oc process -f dashboard.template.yml --param-file=dashboard.template.env | oc create -n <type_here_the_namespace> -f -
+
+## ServiceMonitor
+
+For each POD which exposes the metrics has to be created a "ServiceMonitor" object.
+
+This object specify both the application (or POD name) and the coordinates of metrics where the prometheus service will scrape.
+
+
+> Clipboard
+
+    oc get clusterversion -o jsonpath='{.items[].status.desired.version}{"\n"}' | cut -d. -f1,2
