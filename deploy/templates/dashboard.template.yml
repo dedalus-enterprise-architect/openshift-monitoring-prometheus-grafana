@@ -12,6 +12,23 @@ metadata:
   name: dedalus-grafana
 objects:
 # :::
+# ::: cluster role binding: give the RBAC cluster-monitoring-view permission to the grafana-serviceaccount
+# :::
+- apiVersion: authorization.openshift.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: grafana-cluster-monitoring-view-binding
+    labels:
+      app: grafana
+  subjects:
+  - kind: ServiceAccount
+    name: grafana-serviceaccount
+    namespace: openshift-monitoring-dedalus
+  roleRef:
+    kind: ClusterRole
+    name: cluster-monitoring-view
+    apiGroup: rbac.authorization.k8s.io
+# :::
 # ::: Grafana Data Source
 # :::
 - apiVersion: integreatly.org/v1alpha1
@@ -32,7 +49,7 @@ objects:
           httpHeaderValue1: >-
             Bearer ${TOKEN_BEARER}
         type: prometheus
-        url: '${THANOS_QUERIER_URL}'
+        url: 'https://${THANOS_QUERIER_URL}'
     name: prometheus-grafana-ds.yml
 # :::
 # ::: Grafana Dashboard: JVM
@@ -53,26 +70,6 @@ objects:
       - inputName: "DS_PROMETHEUS"
         datasourceName: "Prometheus"
 parameters:
-# - name: CPU_REQUEST
-#   displayName: Container CPU Request
-#   description: Minimum amount of millicore of CPU the container can use.
-#   required: false
-#   value: 100m
-# - name: MEMORY_REQUEST
-#   displayName: Container Memory Request
-#   description: Minimum amount of memory the container can use for JAVA application.
-#   required: false
-#   value: 600Mi
-# - name: CPU_LIMIT
-#   displayName: Container CPU Limit
-#   description: Maximum amount of millicore of CPU the container can use.
-#   required: false
-#   value: 2000m
-# - name: MEMORY_LIMIT
-#   displayName: Container Memory Limit
-#   description: Maximum amount of memory the container can use for JAVA application.
-#   required: false
-#   value: 2400Mi
 - name: TOKEN_BEARER
   displayName: Openshift Token Bearer
   description: Type the Openshift Token
