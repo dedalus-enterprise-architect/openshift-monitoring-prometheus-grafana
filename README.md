@@ -14,17 +14,21 @@ This project explain how to Set Up a custom Grafana instance having the followin
 
     ```oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@```
 
-* get the token bearer
+    or remove if it needs to restore settings:
+
+    ```oc adm policy remove-cluster-role-from-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@```
+
+* fill the variable: __TOKEN_BEARER__ getting the token bearer as follow:
 
     ```oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@```
 
-* get the Thanos route
+* fill the variable: __THANOS_QUERIER_URL__ getting the Thanos route as follow:
 
     ```oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host```
 
-it follows an output example:
+  it follows an output example:
 
-    https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+      https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
 
 * Replace both the ${TOKEN_BEARER} and the ${THANOS_QUERIER_URL} variables with the previous command output above into the file: _grafana.datasource.yml_
 
@@ -115,11 +119,9 @@ The dashboards can be loaded from:
 
 ### Templates
 
-It follows some optionals command to create all objects as well.
+#### Pre-Requisites
 
->
 > NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
->
 
 ```
   dashboardLabelSelector:
@@ -132,9 +134,13 @@ It follows some optionals command to create all objects as well.
 
 otherwise you execute the command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
 
-```oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge --patch="$(cat https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" -n @type_here_the_namespace@```
+```oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" -n @type_here_the_namespace@```
 
 **IMPORTANT**: Use the merge type when patching the CRD object.
+
+#### Create the objects using the template
+
+It follows some optionals command to create all objects as well.
 
 * Passing the parameters inline:
 
@@ -153,7 +159,9 @@ otherwise you execute the command but only after you have replaced the placehold
 
 * Passing the parameters by an env file as input:
 
-      oc process -f dashboard.template.yml --param-file=dashboard.template.env | oc create -n @type_here_the_namespace@ -f -
+      oc process -f dashboard.template.yml --param-file=dashboard.template.env | oc create -n **@type_here_the_namespace@** -f -
+  
+  but don't forget to adjust the values within the file: __dashboard.template.env__ before proceed.
 
 ## ServiceMonitor
 
