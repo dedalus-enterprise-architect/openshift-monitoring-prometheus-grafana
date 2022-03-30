@@ -1,7 +1,7 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
-  name: tomcat-dashboard-v0
+  name: jvm-dashboard-v0
   labels:
     app: grafana
 spec:

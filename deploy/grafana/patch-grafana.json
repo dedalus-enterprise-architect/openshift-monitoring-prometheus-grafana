@@ -1,0 +1,17 @@
+{
+    "spec": {
+        "dashboardLabelSelector": [
+            {
+                "matchExpressions": [
+                    {
+                        "key": "app",
+                        "operator": "In",
+                        "values": [
+                            "grafana"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

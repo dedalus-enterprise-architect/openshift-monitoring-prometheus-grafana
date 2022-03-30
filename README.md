@@ -12,19 +12,23 @@ This project explain how to Set Up a custom Grafana instance having the followin
 
 * give the RBAC permission to the SA: _grafana-serviceaccount_
 
-    ```oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n dedalus-monitoring```
+    ```oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@```
 
-* get the token bearer
+    or remove if it needs to restore settings:
 
-    ```oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring```
+    ```oc adm policy remove-cluster-role-from-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@```
 
-* get the Thanos route
+* fill the variable: __TOKEN_BEARER__ getting the token bearer as follow:
 
-    ```oc get route thanos-querier -n openshift-monitoring -o json | jq .spec.host```
+    ```oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@```
 
-it follows an output example:
+* fill the variable: __THANOS_QUERIER_URL__ getting the Thanos route as follow:
 
-    https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+    ```oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host```
+
+  it follows an output example:
+
+      https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
 
 * Replace both the ${TOKEN_BEARER} and the ${THANOS_QUERIER_URL} variables with the previous command output above into the file: _grafana.datasource.yml_
 
@@ -72,7 +76,7 @@ spec:
       name: Prometheus
       secureJsonData:
         httpHeaderValue1: >-
-          Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IkNoWjNSak5OZFNFRi1Cb3ZGd3dpaXhySU9ZSVRvSE9pYVBBMzlIQjRYdkEifQ.eyJpc3MiOiJrdWJlcm5ldGVzLfewpjfowjoèfj3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWRhbHVzLW1vbml0b3JpbmciLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoiZ3JhZmFuYS1zZXJ2aWNlYWt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJncmFmYW5hLXNlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiNjIwYjhjZWMtOTVlZS00ZDBhLWJhMzctMmYzNjE0NDJiMWYyIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmRlZGFsdXMtbW9uaXRvcmluZzpncmFmYW5hLXNlcnZpY2VhY2NvdW50In0.
+          Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IkNoWjNSak5OZFNFRi1Cb3ZGd3dpaXhySU9ZSVRvSE9pYVBBMzlIQjRYdkEif.
       type: prometheus
       url: 'https://thanos-querier.openshift-monitoring.svc.cluster.local:9091'
   name: prometheus-grafana-ds.yaml
@@ -87,28 +91,82 @@ The dashboards can be loaded from:
 * any namespace if the scan-all feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/tree/master/deploy/cluster_roles)
 
 
-## Grafana Dashboard Variables
+#### Grafana Dashboard Variables
 
 > Working in progress
 
 
-    projects	    up{namespace!~".*openshift-.*|.*kube-.*"}                           .*namespace="(.*?)".*
+    projects:  	    up{namespace!~".*openshift-.*|.*kube-.*"}                           .*namespace="(.*?)".*
     application	    up{namespace=~"$projects"}                                          .*app="(.*?)".*
     pod             up{app=~"$application",namespace=~"$projects"}                      .*pod="(.*?)".*
-    instance	    up{app=~"$application",pod=~"$pod",namespace=~"$projects"}          .*instance="(.*?)".*
-    instance_http	label_values(http_requests_total{app="$application"}, instance)     .*instance="(.*?)".*
+    instance	      up{app=~"$application",pod=~"$pod",namespace=~"$projects"}          .*instance="(.*?)".*
+    instance_http	label_values(http_requests_total{app="$application"}, instance)       .*instance="(.*?)".*
 
 
-regexp:
+> regexp examples:
 
     .*pod="(.*?)".*instance="(.*?)"
-
     .*instance="(.*?)".*
-
     /.*instance="([^"]*).*/
-
     /pod="(?<text>[^"]+)|instance="(?<value>[^"]+)/g
-
     label_values(jvm_memory_bytes_used{app="$application", instance="$instance", area="heap"},id)
-
     jvm_memory_bytes_used{app="$application", instance="$instance", id=~"$jvm_memory_pool_heap"}
+
+### Templates
+
+#### Pre-Requisites
+
+> NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
+
+```
+  dashboardLabelSelector:
+    - matchExpressions:
+        - key: app
+          operator: In
+          values:
+            - grafana
+```
+
+otherwise run the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
+
+      oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge \
+       --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
+       -n @type_here_the_namespace@
+
+**IMPORTANT**: Use the merge type when patching the CRD object.
+
+#### Create the objects using the template
+
+It follows some optionals command to create all objects as well.
+
+* Passing the parameters inline:
+
+      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
+        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n **@type_here_the_namespace@**)" \
+        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
+        | oc -n **@type_here_the_namespace@** create -f -
+
+
+  where below is a final command afterward the paramaters was replaced:
+
+      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
+        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
+        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
+        | oc -n dedalus-monitoring create -f -
+
+* Passing the parameters by an env file as input:
+
+      oc process -f dashboard.template.yml --param-file=dashboard.template.env | oc create -n **@type_here_the_namespace@** -f -
+  
+  but don't forget to adjust the values within the file: __dashboard.template.env__ before proceed.
+
+## ServiceMonitor
+
+For each POD which exposes the metrics has to be created a "ServiceMonitor" object.
+
+This object specify both the application (or POD name) and the coordinates of metrics where the prometheus service will scrape.
+
+
+> Clipboard
+
+    oc get clusterversion -o jsonpath='{.items[].status.desired.version}{"\n"}' | cut -d. -f1,2
