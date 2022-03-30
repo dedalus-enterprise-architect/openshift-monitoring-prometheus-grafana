@@ -12,11 +12,11 @@ This project explain how to Set Up a custom Grafana instance having the followin
 
 * give the RBAC permission to the SA: _grafana-serviceaccount_
 
-    ```oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n <type_here_the_namespace>```
+    ```oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@```
 
 * get the token bearer
 
-    ```oc serviceaccounts get-token grafana-serviceaccount -n <type_here_the_namespace>```
+    ```oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@```
 
 * get the Thanos route
 
@@ -118,7 +118,7 @@ The dashboards can be loaded from:
 It follows some optionals command to create all objects as well.
 
 >
-> NOTES: before proceed is necessary making sure the following dashboard selector snippet is already configured within the Grafana instance object:
+> NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
 >
 
 ```
@@ -130,15 +130,21 @@ It follows some optionals command to create all objects as well.
             - grafana
 ```
 
+otherwise you execute the command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
+
+```oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge --patch="$(cat https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" -n @type_here_the_namespace@```
+
+**IMPORTANT**: Use the merge type when patching the CRD object.
+
 * Passing the parameters inline:
 
       oc process -f dashboard.template.yml \
-        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n **<type_here_the_namespace>**)" \
+        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n **@type_here_the_namespace@**)" \
         -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-        | oc -n **<type_here_the_namespace>** create -f -
+        | oc -n **@type_here_the_namespace@** create -f -
 
 
-  where it follows a final command afterward the paramaters was replaced:
+  where below is a final command afterward the paramaters was replaced:
 
       oc process -f dashboard.template.yml \
         -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n openshift-monitoring-dedalus)" \
@@ -147,7 +153,7 @@ It follows some optionals command to create all objects as well.
 
 * Passing the parameters by an env file as input:
 
-      oc process -f dashboard.template.yml --param-file=dashboard.template.env | oc create -n <type_here_the_namespace> -f -
+      oc process -f dashboard.template.yml --param-file=dashboard.template.env | oc create -n @type_here_the_namespace@ -f -
 
 ## ServiceMonitor
 
