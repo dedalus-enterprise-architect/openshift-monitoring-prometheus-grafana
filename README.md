@@ -88,7 +88,7 @@ The dashboards can be loaded from:
 
 * within the same namespace where the operator is deployed in
 
-* any namespace if the scan-all feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/tree/master/deploy/cluster_roles)
+* any namespace if the scan-all feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/tree/master/deploy/cluster_roles))
 
 
 #### Grafana Dashboard Variables
