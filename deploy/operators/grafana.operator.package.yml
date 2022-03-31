@@ -1,0 +1,99 @@
+apiVersion: packages.operators.coreos.com/v1
+kind: PackageManifest
+metadata:
+  labels:
+    catalog: community-operators
+    catalog-namespace: openshift-marketplace
+    operatorframework.io/arch.amd64: supported
+    operatorframework.io/arch.arm64: supported
+    operatorframework.io/arch.s390x: supported
+    operatorframework.io/os.linux: supported
+    provider: Red Hat
+    provider-url: ""
+  name: grafana-operator
+spec: {}
+status:
+  catalogSource: community-operators
+  catalogSourceDisplayName: Community Operators
+  catalogSourceNamespace: openshift-marketplace
+  catalogSourcePublisher: Red Hat
+  channels:
+  - currentCSV: grafana-operator.v4.2.0
+    currentCSVDesc:
+      annotations:
+        alm-examples: '[]'
+        capabilities: Basic Install
+        categories: Monitoring
+        certified: "False"
+        containerImage: quay.io/grafana-operator/grafana-operator:v4.2.0
+        description: A Kubernetes Operator based on the Operator SDK for creating
+          and managing Grafana instances
+        operators.operatorframework.io/builder: operator-sdk-v1.13.1
+        operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+        repository: https://github.com/grafana-operator/grafana-operator
+        support: Red Hat
+      apiservicedefinitions: {}
+      customresourcedefinitions:
+        owned:
+        - description: GrafanaDashboard is the Schema for the grafanadashboards API
+          displayName: Grafana Dashboard
+          kind: GrafanaDashboard
+          name: grafanadashboards.integreatly.org
+          version: v1alpha1
+        - kind: GrafanaDataSource
+          name: grafanadatasources.integreatly.org
+          version: v1alpha1
+        - kind: GrafanaNotificationChannel
+          name: grafananotificationchannels.integreatly.org
+          version: v1alpha1
+        - description: Grafana is the Schema for the grafanas API
+          displayName: Grafana
+          kind: Grafana
+          name: grafanas.integreatly.org
+          version: v1alpha1
+      description: |
+        A Kubernetes Operator based on the Operator SDK for creating and managing Grafana instances.
+
+        Grafana is an open platform for beautiful analytics and monitoring. For more information please visit the [Grafana website](https://grafana.com)
+
+        # Current status
+
+        The Operator can deploy and manage a Grafana instance on Kubernetes and OpenShift. The following features are supported:
+
+        * Install Grafana to a namespace
+        * Configure Grafana through the custom resource
+        * Import Grafana dashboards from the same or other namespaces
+        * Import Grafana data sources from the same namespace
+        * Install Plugins (panels)
+      displayName: Grafana Operator
+      installModes:
+      - supported: true
+        type: OwnNamespace
+      - supported: true
+        type: SingleNamespace
+      - supported: false
+        type: MultiNamespace
+      - supported: false
+        type: AllNamespaces
+      keywords:
+      - grafana
+      links:
+      - name: Grafana Operator
+        url: https://grafana-operator.domain
+      maintainers:
+      - email: pbraun@redhat.com
+        name: Peter Braun
+      - email: hstefans@redhat.com
+        name: Hubert Stefanski
+      maturity: alpha
+      provider:
+        name: Red Hat
+      relatedImages:
+      - gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+      - quay.io/grafana-operator/grafana-operator:v4.2.0
+      version: 4.2.0
+    name: v4
+  defaultChannel: v4
+  packageName: grafana-operator
+  provider:
+    name: Red Hat
