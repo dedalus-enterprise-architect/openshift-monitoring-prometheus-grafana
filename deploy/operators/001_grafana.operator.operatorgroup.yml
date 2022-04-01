@@ -4,4 +4,4 @@ metadata:
   name: grafana-operator-group
 spec:
   targetNamespaces:
-  - test-monitoring
+  - openshift-monitoring-dedalus
