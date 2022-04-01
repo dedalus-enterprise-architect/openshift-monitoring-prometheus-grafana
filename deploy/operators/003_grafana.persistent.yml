@@ -1,0 +1,25 @@
+apiVersion: integreatly.org/v1alpha1
+kind: Grafana
+metadata:
+  name: dedalus-grafana
+spec:
+  config: {}
+  dashboardLabelSelector:
+    - matchExpressions:
+      - key: app
+        operator: In
+        values:
+        - grafana
+  ingress:
+    annotations:
+      service.beta.openshift.io/serving-cert-secret-name: grafana-tls
+    enabled: true
+    targetPort: https
+    termination: reencrypt
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1000Mi
+    requests:
+      cpu: 1000m
+      memory: 200Mi
