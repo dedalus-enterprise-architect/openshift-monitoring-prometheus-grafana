@@ -2,6 +2,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: grafana-cluster-monitoring-binding
+  labels:
+    app: grafana-dedalus
 subjects:
   - kind: ServiceAccount
     namespace: openshift-monitoring-dedalus
@@ -15,6 +17,8 @@ apiVersion: authorization.openshift.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: grafana-proxy
+  labels:
+    app: grafana-dedalus
 subjects:
   - kind: ServiceAccount
     name: grafana-serviceaccount

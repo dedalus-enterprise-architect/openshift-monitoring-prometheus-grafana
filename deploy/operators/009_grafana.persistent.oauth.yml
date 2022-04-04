@@ -2,6 +2,8 @@ apiVersion: integreatly.org/v1alpha1
 kind: Grafana
 metadata:
   name: grafana-persistent-oauth
+  labels:
+    app: grafana-dedalus
 spec:
   client:
     preferService: true
@@ -21,9 +23,9 @@ spec:
     log:
       level: warn
       mode: console
-    security:
-      admin_password: admin
-      admin_user: admin
+    # security:
+    #   admin_password: admin
+    #   admin_user: admin
   configMaps:
     - ocp-injected-certs
   containers:
@@ -69,12 +71,12 @@ spec:
         operator: In
         values:
         - grafana
-  ingress:
-    annotations:
-      service.beta.openshift.io/serving-cert-secret-name: grafana-tls
-    enabled: true
-    targetPort: https
-    termination: reencrypt
+  # ingress:
+  #   annotations:
+  #     service.beta.openshift.io/serving-cert-secret-name: grafana-tls
+  #   enabled: true
+  #   targetPort: https
+  #   termination: reencrypt
   resources:
     limits:
       cpu: 500m

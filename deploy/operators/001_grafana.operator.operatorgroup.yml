@@ -2,6 +2,8 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: grafana-operator-group
+  labels:
+    app: grafana-dedalus
 spec:
   targetNamespaces:
   - openshift-monitoring-dedalus

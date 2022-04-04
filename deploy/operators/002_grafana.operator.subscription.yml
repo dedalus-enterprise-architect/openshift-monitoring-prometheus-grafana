@@ -4,6 +4,8 @@ metadata:
   # annotations:
   #   olm.operatorGroup: grafana-operator-group
   name: grafana-operator
+  labels:
+    app: grafana-dedalus
   # For AllNamespaces install mode usage, specify the 'openshift-operators' namespace.
   # Otherwise, specify the relevant single namespace for SingleNamespace install mode usage.
   # look for installModes by command: 'oc get packagemanifests grafana-operator -o yaml'
