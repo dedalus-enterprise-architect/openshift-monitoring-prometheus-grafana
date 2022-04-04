@@ -11,7 +11,7 @@ spec:
       - key: app
         operator: In
         values:
-        - grafana
+        - grafana-dedalus
   ingress:
     annotations:
       service.beta.openshift.io/serving-cert-secret-name: grafana-tls

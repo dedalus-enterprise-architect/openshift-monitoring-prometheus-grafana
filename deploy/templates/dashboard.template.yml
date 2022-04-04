@@ -19,7 +19,7 @@ objects:
   metadata:
     name: grafana-cluster-monitoring-view-binding
     labels:
-      app: grafana
+      app: grafana-dedalus
   subjects:
   - kind: ServiceAccount
     name: grafana-serviceaccount
@@ -35,6 +35,8 @@ objects:
   kind: GrafanaDataSource
   metadata:
     name: prometheus-grafana-ds
+    labels:
+      app: grafana-dedalus
   spec:
     datasources:
       - access: proxy
@@ -59,7 +61,7 @@ objects:
   metadata:
     name: jvm-dashboard
     labels:
-      app: grafana
+      app: grafana-dedalus
   spec:
     # plugins:
     #   - name: grafana-piechart-panel

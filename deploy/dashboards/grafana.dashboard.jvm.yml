@@ -3,7 +3,7 @@ kind: GrafanaDashboard
 metadata:
   name: jvm-dashboard
   labels:
-    app: grafana
+    app: grafana-dedalus
 spec:
   # plugins:
   #   - name: grafana-piechart-panel
