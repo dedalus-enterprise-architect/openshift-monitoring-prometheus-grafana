@@ -6,7 +6,104 @@ This project explain how to Set Up a custom Grafana instance having the followin
  
  * Openshift 4.9 or major
 
-## Grafana operator setup
+## Grafana operator: Installation
+
+Before start you must choose the rights template:
+
+* __templates/grafanaoperator.template.basic.yml__ : this template aims is installing the Grafana Operator without the following features:
+
+    * ephemeral storage
+    * basic login
+
+* __templates/grafanaoperator.template.yml__ : this template aims is installing the Grafana Operator within the following features:
+
+    * persistent storage
+    * oAuth Login (it allows the login by the same Openshift user datas)
+
+> IMPORTANT: an user cluster role is needed in order to run the following commands.
+
+
+### Creating the Operator's objects
+
+It follows the step by step commands to install the Grafana Operator as well.
+
+* Process the template on fly by passing the parameters inline:
+
+      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
+        -p NAMESPACE=@type_here_the_namespace@ | oc -n @type_here_the_namespace@ create -f -
+
+  where below is a final command after the placeholder: '**@type_here_the_namespace@**' was replaced by the value: 'dedalus-monitoring' :
+
+      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
+        -p NAMESPACE=dedalus-monitoring | oc -n dedalus-monitoring create -f -
+
+* Approve the Operator's updates by patching the __InstallPlan__ :
+
+      oc patch InstallPlan/$(oc get --no-headers  InstallPlan|grep grafana-operator|cut -d' ' -f1) --type merge \
+       --patch='{"spec":{"approved":true}}' -n @type_here_the_namespace@
+
+> Check Objects
+
+you can get a list of the created objects as follows:
+
+    oc get all,ConfigMap,Secret,Grafana,OperatorGroup,Subscription,GrafanaDataSource,GrafanaDashboard,ClusterRole,ClusterRoleBinding -l app=grafana-dedalus -n **@type_here_the_namespace@**
+
+and pay attention in case you wanted deleting any previously created objects at __cluster level__
+
+    oc delete ClusterRole grafana-proxy
+    oc delete ClusterRoleBinding grafana-proxy
+    oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding
+
+## Grafana operator: Installing the predefined dashboards
+
+### Pre-Requisites
+
+> NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
+
+```
+  dashboardLabelSelector:
+    - matchExpressions:
+        - key: app
+          operator: In
+          values:
+            - grafana
+```
+
+otherwise run the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
+
+      oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge \
+       --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
+       -n @type_here_the_namespace@
+
+**IMPORTANT**: Use the merge type when patching the CRD object.
+
+### Dashboard objects and its dependencies creation using a template
+
+It follows some optionals command to create all objects as well.
+
+* Passing the parameters inline:
+
+      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
+        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@)" \
+        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
+        | oc -n @type_here_the_namespace@ create -f -
+
+  where below is a final command after the placeholder: '**@type_here_the_namespace@**' was replaced by the value: 'dedalus-monitoring':
+
+      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
+        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
+        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
+        | oc -n dedalus-monitoring create -f -
+
+> if you had several parameters to manage is prefereable passing the parameters by an env file as input like in the example below:
+
+      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
+        --param-file=dashboard.template.env | oc create -n @type_here_the_namespace@ -f -
+  
+  but don't forget to adjust the values within the file: __templates/dashboard.template.env__ before proceed.
+
+
+## Project's Contents
 
 ### Datasource
 
@@ -111,54 +208,6 @@ The dashboards can be loaded from:
     /pod="(?<text>[^"]+)|instance="(?<value>[^"]+)/g
     label_values(jvm_memory_bytes_used{app="$application", instance="$instance", area="heap"},id)
     jvm_memory_bytes_used{app="$application", instance="$instance", id=~"$jvm_memory_pool_heap"}
-
-### Templates
-
-#### Pre-Requisites
-
-> NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
-
-```
-  dashboardLabelSelector:
-    - matchExpressions:
-        - key: app
-          operator: In
-          values:
-            - grafana
-```
-
-otherwise run the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
-
-      oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge \
-       --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
-       -n @type_here_the_namespace@
-
-**IMPORTANT**: Use the merge type when patching the CRD object.
-
-#### Create the objects using the template
-
-It follows some optionals command to create all objects as well.
-
-* Passing the parameters inline:
-
-      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n **@type_here_the_namespace@**)" \
-        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-        | oc -n **@type_here_the_namespace@** create -f -
-
-
-  where below is a final command afterward the paramaters was replaced:
-
-      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
-        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-        | oc -n dedalus-monitoring create -f -
-
-* Passing the parameters by an env file as input:
-
-      oc process -f dashboard.template.yml --param-file=dashboard.template.env | oc create -n **@type_here_the_namespace@** -f -
-  
-  but don't forget to adjust the values within the file: __dashboard.template.env__ before proceed.
 
 ## ServiceMonitor
 
