@@ -14,20 +14,20 @@ objects:
 # :::
 # ::: cluster role binding: give the RBAC cluster-monitoring-view permission to the grafana-serviceaccount
 # :::
-- apiVersion: authorization.openshift.io/v1
-  kind: ClusterRoleBinding
-  metadata:
-    name: grafana-cluster-monitoring-view-binding
-    labels:
-      app: grafana-dedalus
-  subjects:
-  - kind: ServiceAccount
-    name: grafana-serviceaccount
-    namespace: dedalus-monitoring
-  roleRef:
-    kind: ClusterRole
-    name: cluster-monitoring-view
-    apiGroup: rbac.authorization.k8s.io
+# - apiVersion: authorization.openshift.io/v1
+#   kind: ClusterRoleBinding
+#   metadata:
+#     name: grafana-cluster-monitoring-view-binding
+#     labels:
+#       app: grafana-dedalus
+#   subjects:
+#   - kind: ServiceAccount
+#     name: grafana-serviceaccount
+#     namespace: dedalus-monitoring
+#   roleRef:
+#     kind: ClusterRole
+#     name: cluster-monitoring-view
+#     apiGroup: rbac.authorization.k8s.io
 # :::
 # ::: Grafana Data Source
 # :::
