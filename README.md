@@ -6,6 +6,9 @@ This project explain how to Set Up a custom Grafana instance having the followin
  
  * Openshift 4.9 or major
 
+References:
+  - https://github.com/grafana-operator/grafana-operator
+
 ## Grafana operator: Installation
 
 Before start you must choose the rights template:
@@ -18,7 +21,7 @@ Before start you must choose the rights template:
 * __templates/grafanaoperator.template.yml__ : this template aims is installing the Grafana Operator within the following features:
 
     * persistent storage
-    * oAuth Login (it allows the login by the same Openshift user datas)
+    * oAuth Login (it allows the login by the same Openshift user data)
 
 > IMPORTANT: an user cluster role is needed in order to run the following commands.
 
@@ -46,13 +49,14 @@ It follows the step by step commands to install the Grafana Operator as well.
 
 you can get a list of the created objects as follows:
 
-    oc get all,ConfigMap,Secret,Grafana,OperatorGroup,Subscription,GrafanaDataSource,GrafanaDashboard,ClusterRole,ClusterRoleBinding -l app=grafana-dedalus -n **@type_here_the_namespace@**
+    oc get all,ConfigMap,Secret,Grafana,OperatorGroup,Subscription,GrafanaDataSource,GrafanaDashboard,ClusterRole,ClusterRoleBinding \
+    -l app=grafana-dedalus --no-headers -n **@type_here_the_namespace@** |cut -d' ' -f1
 
 and pay attention in case you wanted deleting any previously created objects at __cluster level__
 
-    oc delete ClusterRole grafana-proxy
-    oc delete ClusterRoleBinding grafana-proxy
-    oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding
+    oc delete ClusterRole grafana-proxy-@type_here_the_namespace@
+    oc delete ClusterRoleBinding grafana-proxy-@type_here_the_namespace@
+    oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
 
 ## Grafana operator: Installing the predefined dashboards
 
@@ -69,7 +73,15 @@ and pay attention in case you wanted deleting any previously created objects at 
             - grafana
 ```
 
-otherwise run the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
+Proceed running the following command:
+
+```oc get grafana grafana-basic --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'```
+
+and check the output is:
+
+    grafana-dedalus
+
+otherwise update the object by running the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
 
       oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge \
        --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
@@ -95,7 +107,7 @@ It follows some optionals command to create all objects as well.
         -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
         | oc -n dedalus-monitoring create -f -
 
-> if you had several parameters to manage is prefereable passing the parameters by an env file as input like in the example below:
+> if you have multiple parameters to handle it might be more useful to pass parameters from an env file as input as in the following example:
 
       oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
         --param-file=dashboard.template.env | oc create -n @type_here_the_namespace@ -f -
