@@ -6,6 +6,9 @@ This project explain how to Set Up a custom Grafana instance having the followin
  
  * Openshift 4.9 or major
 
+References:
+  - https://github.com/grafana-operator/grafana-operator
+
 ## Grafana operator: Installation
 
 Before start you must choose the rights template:
@@ -69,7 +72,15 @@ and pay attention in case you wanted deleting any previously created objects at 
             - grafana
 ```
 
-otherwise run the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
+Proceed running the following command:
+
+```oc get grafana grafana-basic --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'```
+
+and check the output is:
+
+    grafana-dedalus
+
+otherwise update the object by running the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
 
       oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge \
        --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
