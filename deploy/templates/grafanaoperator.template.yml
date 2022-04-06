@@ -6,7 +6,7 @@ metadata:
   annotations:
     description: |-
       Grafana Operator definition with persistent storage.
-      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/tree/develop/deploy/templates.
+      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/develop/README.md.
     iconClass: icon-d4center
     tags: dedalus-grafanaoperator,dedalus
   name: dedalus-grafanaoperator

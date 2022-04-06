@@ -6,7 +6,7 @@ metadata:
   annotations:
     description: |-
       Grafana dashboard definition about the JVM without persistent storage.
-      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/master/README.md.
+      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/develop/README.md.
     iconClass: icon-d4center
     tags: dedalus-grafana,dedalus
   name: dedalus-grafana
