@@ -104,7 +104,9 @@ By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below sn
 
 Proceed running the following command:
 
-```oc get grafana grafana-basic --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'```
+```bash
+oc get grafana grafana-basic --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
+```
 
 and check that the output looks like as follow:
 
