@@ -3,7 +3,7 @@ kind: GrafanaDashboard
 metadata:
   name: jvm-dashboard
   labels:
-    app: grafana
+    app: grafana-dedalus
 spec:
   # plugins:
   #   - name: grafana-piechart-panel
@@ -3061,7 +3061,7 @@ spec:
                     "allValue": null,
                     "current": {},
                     "datasource": null,
-                    "definition": "up{namespace!~\".*openshift-.*|.*kube-.*\"}",
+                    "definition": "up{namespace!~\"default|.*openshift-.*|.*kube-.*\"}",
                     "description": null,
                     "error": null,
                     "hide": 0,
@@ -3071,7 +3071,7 @@ spec:
                     "name": "namespaces",
                     "options": [],
                     "query": {
-                        "query": "up{namespace!~\".*openshift-.*|.*kube-.*\"}",
+                        "query": "up{namespace!~\"default|.*openshift-.*|.*kube-.*\"}",
                         "refId": "StandardVariableQuery"
                     },
                     "refresh": 1,
