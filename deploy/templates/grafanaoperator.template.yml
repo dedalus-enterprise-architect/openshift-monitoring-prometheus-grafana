@@ -55,9 +55,9 @@ objects:
     # Set a specific version of an Operator CSV
     startingCSV: grafana-operator.v4.2.0
     config:
-      # env: 
-      # - name: ARGS
-      #   value: "-v=10"
+      env:
+        - name: DASHBOARD_NAMESPACES_ALL
+          value: "${DASHBOARD_NAMESPACES_ALL}"
       # envFrom: 
       # - secretRef:
       #     name: license-secret
@@ -183,9 +183,9 @@ objects:
     client:
       preferService: true
     config:
-      env:
-        - name: DASHBOARD_NAMESPACES_ALL
-          value: "${DASHBOARD_NAMESPACES_ALL}"
+      # env: 
+      # - name: ARGS
+      #   value: "-v=10"
       # envFrom:
       # - secretRef:
       #     name: license-secret
