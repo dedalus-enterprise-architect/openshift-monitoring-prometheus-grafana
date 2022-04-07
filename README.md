@@ -23,12 +23,9 @@ Before start you must choose the rights template:
     * persistent storage
     * oAuth Login (it allows the login by the same Openshift user data)
 
-> IMPORTANT: an user cluster role is needed in order to run the following commands.
-
-
 ### Creating the Operator's objects
 
-> IMPORTANT: it's needed a cluster administrator rights.
+> WARNING: a Cluster Role is required to proceed on this section.
 
 It follows the step by step commands to install the Grafana Operator as well:
 
@@ -132,7 +129,7 @@ With the following commands you create the *dashboards presets* including its de
         | oc -n @type_here_the_namespace@ create -f -
 
 
-  where below is a final command after the placeholder: '**@type_here_the_namespace@**' was replaced by the value: 'dedalus-monitoring':
+  where below is shown the command with the placeholder: '**@type_here_the_namespace@**' replaced by the value: 'dedalus-monitoring':
 
       oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
         -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
@@ -148,7 +145,57 @@ With the following commands you create the *dashboards presets* including its de
 
 ## Project's Contents
 
-### Datasource
+The directories tree:
+
+- deploy:
+    - dashboards:
+      - grafana.dashboard.jvm.basic.json
+      - grafana.dashboard.jvm.basic.yml
+      - grafana.dashboard.jvm.json
+      - grafana.dashboard.jvm.yml
+      - standalone:
+        - grafana.dashboard.jvm.advanced.yml
+        - grafana.dashboard.jvm.basic.yml
+    - grafana
+      - patch-grafana.json
+      - patch-grafana.yml
+    - servicemonitor
+      - servicemonitors.template.yml
+    - templates
+      - dashboard.template.env
+      - dashboard.template.yml
+      - grafanaoperator.template.basic.yml
+      - grafanaoperator.template.yml
+
+### dashboards
+
+This folder includes the templates used for:
+
+* ```grafana.dashboard.jvm.basic.json```: the JSON dashboard template (not the micrometer version)
+* ```grafana.dashboard.jvm.basic.yml```: the _grafanadashboard_ object definition (with link to a remote location)
+* ```grafana.dashboard.jvm.json```: the JSON dashboard template (micrometer version)
+* ```grafana.dashboard.jvm.yml```: the _grafanadashboard_ object definition
+* ```standalone/grafana.dashboard.jvm.advanced.yml```: the _grafanadashboard_ object definition with inline dashboard (micrometer version)
+* ```standalone/grafana.dashboard.jvm.basic.yml```: the _grafanadashboard_ object definition with inline dashboard (not the micrometer version)
+
+### servicemonitor
+
+> ```deploy/servicemonitor/servicemonitors.template.yml```
+
+For each POD which exposes the metrics has to be created a "ServiceMonitor" object.
+
+This object specify both the application (or POD name) and the coordinates of metrics where the prometheus service will scrape.
+
+### templates
+
+This folder includes the templates used for:
+
+* ```dashboard.template.yml```: setup the dashboards preset
+* ```grafanaoperator.template.basic.yml```: setup the operator with ephemeral storage
+* ```grafanaoperator.template.yml```: setup the operator with full feature
+
+---
+### Useful commands
 
 * give the RBAC permission to the SA: _grafana-serviceaccount_
 
@@ -169,65 +216,3 @@ With the following commands you create the *dashboards presets* including its de
   it follows an output example:
 
       https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
-
-* Replace both the ${TOKEN_BEARER} and the ${THANOS_QUERIER_URL} variables with the previous command output above into the file: _grafana.datasource.yml_
-
-__the original template__
-
-```
-apiVersion: integreatly.org/v1alpha1
-kind: GrafanaDataSource
-metadata:
-  name: prometheus-grafana-ds
-spec:
-  datasources:
-    - access: proxy
-      editable: true
-      isDefault: true
-      jsonData:
-        httpHeaderName1: Authorization
-        timeInterval: 5s
-        tlsSkipVerify: true
-      name: Prometheus
-      secureJsonData:
-        httpHeaderValue1: >-
-          Bearer ${TOKEN_BEARER}
-      type: prometheus
-      url: '${THANOS_QUERIER_URL}'
-  name: prometheus-grafana-ds.yaml
-```
-
-__the target template__
-
-```
-apiVersion: integreatly.org/v1alpha1
-kind: GrafanaDataSource
-metadata:
-  name: prometheus-grafana-ds
-spec:
-  datasources:
-    - access: proxy
-      editable: true
-      isDefault: true
-      jsonData:
-        httpHeaderName1: Authorization
-        timeInterval: 5s
-        tlsSkipVerify: true
-      name: Prometheus
-      secureJsonData:
-        httpHeaderValue1: >-
-          Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IkNoWjNSak5OZFNFRi1Cb3ZGd3dpaXhySU9ZSVRvSE9pYVBBMzlIQjRYdkEif.
-      type: prometheus
-      url: 'https://thanos-querier.openshift-monitoring.svc.cluster.local:9091'
-  name: prometheus-grafana-ds.yaml
-```
-
-### Dashboards: the ServiceMonitor object
-
-References:
-
-  * [link](deploy/servicemonitor/servicemonitors.template.yml)
-
-For each POD which exposes the metrics has to be created a "ServiceMonitor" object.
-
-This object specify both the application (or POD name) and the coordinates of metrics where the prometheus service will scrape.
