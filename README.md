@@ -28,17 +28,23 @@ Before start you must choose the rights template:
 
 ### Creating the Operator's objects
 
-It follows the step by step commands to install the Grafana Operator as well.
+> IMPORTANT: it's needed a cluster administrator rights.
+
+It follows the step by step commands to install the Grafana Operator as well:
 
 * Process the template on fly by passing the parameters inline:
 
       oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
-        -p NAMESPACE=@type_here_the_namespace@ | oc -n @type_here_the_namespace@ create -f -
+        -p DASHBOARD_NAMESPACES_ALL=true \
+        -p NAMESPACE=@type_here_the_namespace@ \
+        -p STORAGECLASS=@type_here_the_custom_storageclass@ \
+        | oc -n @type_here_the_namespace@ create -f -
 
-  where below is a final command after the placeholder: '**@type_here_the_namespace@**' was replaced by the value: 'dedalus-monitoring' :
+  where below is shown the command with the placeholder: '**@type_here_the_namespace@**' replaced by the value: 'dedalus-monitoring' and the others parameters have been omitted to load the default settings:
 
       oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
-        -p NAMESPACE=dedalus-monitoring | oc -n dedalus-monitoring create -f -
+        -p NAMESPACE=dedalus-monitoring \
+        | oc -n dedalus-monitoring create -f -
 
 * Approve the Operator's updates by patching the __InstallPlan__ :
 
@@ -57,6 +63,29 @@ and pay attention in case you wanted deleting any previously created objects at 
     oc delete ClusterRole grafana-proxy-@type_here_the_namespace@
     oc delete ClusterRoleBinding grafana-proxy-@type_here_the_namespace@
     oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
+
+#### Enabling the dashboards automatic discovery how to
+
+> Consider this section as an *OPTIONAL* task because this feature is enabled by default
+
+The dashboards can be loaded from:
+
+1. within the same namespace where the operator is deployed in
+
+1. any namespace when the *scan-all* feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/blob/master/documentation/multi_namespace_support.md))
+
+The operator can import dashboards from either one, some or all namespaces. By default, it will only look for dashboards in its own namespace.
+By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below snippet of code, the operator can watch for dashboards in other namespaces.
+
+```yaml
+  apiVersion: integreatly.org/v1alpha1
+  kind: Grafana
+  spec:
+    config:
+      env:
+      - name: DASHBOARD_NAMESPACES_ALL
+        value: "true"
+```
 
 ## Grafana operator: Installing the predefined dashboards
 
@@ -77,7 +106,7 @@ Proceed running the following command:
 
 ```oc get grafana grafana-basic --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'```
 
-and check the output is:
+and check that the output looks like as follow:
 
     grafana-dedalus
 
@@ -91,7 +120,7 @@ otherwise update the object by running the following command but only after you 
 
 ### Dashboard objects and its dependencies creation using a template
 
-It follows some optionals command to create all objects as well.
+With the following commands you create the *dashboards presets* including its dependencies objects as well:
 
 * Passing the parameters inline:
 
@@ -100,6 +129,7 @@ It follows some optionals command to create all objects as well.
         -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
         | oc -n @type_here_the_namespace@ create -f -
 
+
   where below is a final command after the placeholder: '**@type_here_the_namespace@**' was replaced by the value: 'dedalus-monitoring':
 
       oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
@@ -107,13 +137,12 @@ It follows some optionals command to create all objects as well.
         -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
         | oc -n dedalus-monitoring create -f -
 
-> if you have multiple parameters to handle it might be more useful to pass parameters from an env file as input as in the following example:
+> it follows an alternative way to manage multiple parameters to pass in using an env file as input:
 
       oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
         --param-file=dashboard.template.env | oc create -n @type_here_the_namespace@ -f -
   
   but don't forget to adjust the values within the file: __templates/dashboard.template.env__ before proceed.
-
 
 ## Project's Contents
 
@@ -191,43 +220,12 @@ spec:
   name: prometheus-grafana-ds.yaml
 ```
 
-### Dashboards
+### Dashboards: the ServiceMonitor object
 
-The dashboards can be loaded from:
+References:
 
-* within the same namespace where the operator is deployed in
-
-* any namespace if the scan-all feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/tree/master/deploy/cluster_roles))
-
-
-#### Grafana Dashboard Variables
-
-> Working in progress
-
-
-    projects:  	    up{namespace!~".*openshift-.*|.*kube-.*"}                           .*namespace="(.*?)".*
-    application	    up{namespace=~"$projects"}                                          .*app="(.*?)".*
-    pod             up{app=~"$application",namespace=~"$projects"}                      .*pod="(.*?)".*
-    instance	      up{app=~"$application",pod=~"$pod",namespace=~"$projects"}          .*instance="(.*?)".*
-    instance_http	label_values(http_requests_total{app="$application"}, instance)       .*instance="(.*?)".*
-
-
-> regexp examples:
-
-    .*pod="(.*?)".*instance="(.*?)"
-    .*instance="(.*?)".*
-    /.*instance="([^"]*).*/
-    /pod="(?<text>[^"]+)|instance="(?<value>[^"]+)/g
-    label_values(jvm_memory_bytes_used{app="$application", instance="$instance", area="heap"},id)
-    jvm_memory_bytes_used{app="$application", instance="$instance", id=~"$jvm_memory_pool_heap"}
-
-## ServiceMonitor
+  * [link](deploy/servicemonitor/servicemonitors.template.yml)
 
 For each POD which exposes the metrics has to be created a "ServiceMonitor" object.
 
 This object specify both the application (or POD name) and the coordinates of metrics where the prometheus service will scrape.
-
-
-> Clipboard
-
-    oc get clusterversion -o jsonpath='{.items[].status.desired.version}{"\n"}' | cut -d. -f1,2
