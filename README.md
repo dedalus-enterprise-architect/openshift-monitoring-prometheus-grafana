@@ -99,13 +99,17 @@ By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below sn
             - grafana
 ```
 
-Proceed running the following command:
+Make the command to run depending by the template used before. Therefore replace the placeholder: "@type_here_the_grafana_instance_name@":
+  - with 'grafana-persistent-oauth' if you used the template: 'grafanaoperator.template.yml'
+  - with 'grafana-basic' if you used the template: 'grafanaoperator.template.basic.yml'
+
+and run:
 
 ```bash
-oc get grafana grafana-basic --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
+oc get grafana @type_here_the_grafana_instance_name@ --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
 ```
 
-and check that the output looks like as follow:
+afterward check that the output looks like as follow:
 
     grafana-dedalus
 
