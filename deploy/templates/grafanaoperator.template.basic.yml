@@ -6,7 +6,7 @@ metadata:
   annotations:
     description: |-
       Grafana Operator definition with ephemeral storage.
-      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/develop/README.md.
+      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/master/README.md.
     iconClass: icon-d4center
     tags: dedalus-grafanaoperator,dedalus
   name: dedalus-grafanaoperator
@@ -55,9 +55,9 @@ objects:
     # Set a specific version of an Operator CSV
     startingCSV: grafana-operator.v4.2.0
     config:
-      # env:
-      # - name: ARGS
-      #   value: "-v=10"
+      env:
+        - name: DASHBOARD_NAMESPACES_ALL
+          value: "${DASHBOARD_NAMESPACES_ALL}"
       # envFrom:
       # - secretRef:
       #     name: license-secret
@@ -168,3 +168,8 @@ parameters:
   description: Type the Namespace where the grafana Operator will be installed in
   required: true
   value: dedalus-monitoring
+- name: DASHBOARD_NAMESPACES_ALL
+  displayName: Dashboards Scan
+  description: Type to 'true' wheather you want enable the dashboard discovery across all namespaces
+  required: true
+  value: "true"

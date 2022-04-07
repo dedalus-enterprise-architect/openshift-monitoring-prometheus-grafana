@@ -1,3 +1,8 @@
+# 
+# This definition is not compliants with Openshift 3.11
+# Getting the cluster version:
+#   oc get clusterversion -o jsonpath='{.items[].status.desired.version}{"\n"}' | cut -d. -f1,2
+# 
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -11,7 +16,13 @@ spec:
       port: 8080-tcp
       scheme: http
       # HTTP path to scrape for metrics
-      # path: ""
+      path: /metrics
+      # tlsConfig:
+      #   caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
+      #   certFile: /etc/prometheus/secrets/metrics-client-certs/tls.crt
+      #   keyFile: /etc/prometheus/secrets/metrics-client-certs/tls.key
+      #   serverName: oauth-openshift.openshift-authentication.svc
+      # jobLabel: component
       # Timeout after which the scrape is ended
       # scrapeTimeout:
       relabelings:
