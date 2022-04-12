@@ -17,9 +17,16 @@
 #   exit 0
 # }
 
-set -o errexit
+# set -o errexit
 set -o pipefail
 # set -o nounset
+
+function error_handler {
+  error="${1//\"/\'}"
+  printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "err" "$error"
+  # scale_down
+  return 1
+}
 
 # :::
 # ::: METRICS - START
@@ -29,16 +36,15 @@ set -o pipefail
 
 function extract_template_files() {
   printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "Extracting the templates objects..."
-  if oc image extract $TARGET_IMAGE --path /opt/dedalus/templates/*.yml:.  --insecure=true &> errors.txt; then
+  local error=$(oc image extract $TARGET_IMAGE --path /opt/dedalus/templates/*.yml:.  --insecure=true  2>&1 > /dev/null)
+  # if oc image extract $TARGET_IMAGE --path /opt/dedalus/templates/*.yml:.  --insecure=true &> errors.txt; then
+  if [[ $? -ne 0 ]]; then
+    error_handler "$error"
+  else
     for f in `find "./" -maxdepth 1 -iname "*.yml" -o -iname "*.yaml"`
     do
       printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "The template file: ${f} has been extracted successfully"
     done
-  else
-    error=$(<errors.txt)
-    error="${error//\"/\'}"
-    printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "err" "$error"
-    # scale_down
   fi
 }
 
@@ -108,67 +114,51 @@ END
 
 # yq e -P -i '.objects += ({"apiVersion":"monitoring.coreos.com/v1","kind":"ServiceMonitor","metadata":{"labels":{"k8s-app":"${APP_NAME}-servicemonitor"},"name":"${APP_NAME}-servicemonitor","namespace":"${NAMESPACE}"},"spec":{"endpoints":[{"interval":"30s","port":"${serviceport_name}","scheme":"http","path":"/metrics","relabelings":[{"action":"replace","regex":"(.*)","replacement":"$1","separator":";","sourceLabels":["__meta_kubernetes_namespace"],"targetLabel":"namespace"},{"action":"replace","regex":"(.*)","replacement":"$1","separator":";","sourceLabels":["__meta_kubernetes_namespace"],"targetLabel":"kubernetes_namespace"}]}],"selector":{"matchLabels":{"app":"${APP_NAME}"}},"targetLabels":["app"]}})' dedalus.gates.template.json
 
-printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "About to update the template within additionals objects..."
-chmod u+x servicemonitor-build.sh && ./servicemonitor-build.sh &> errors.txt
+local error=$(chmod u+x servicemonitor-build.sh && ./servicemonitor-build.sh 2>&1 > /dev/null)
 if [[ $? -ne 0 ]]; then
-    >&2 error=$(<errors.txt)
-    error="${error//\"/\'}"
-    printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "err" "$error"
-    scale_down
-    # return 1
+  error_handler "$error"
 else
-    printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "The Service Monitor object was added successfully to the template: " $filename
+  printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "build_servicemonitor - the Service Monitor object was added successfully to the template: $FILE"
 fi
 
 }
 
-function create_object() {
+function template_merge() {
   local filename=$1
-  # merge file
-  yq eval-all '. as $item ireduce ({}; . *+ $item)' dedalus.gates.template.yml file.yml
 
-  printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "About to add the template to the catalog..."
-  if oc create -f ./"$filename"  &> errors.txt; then
-    printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "Template added successfully: " $filename
+  # merge file
+  printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "template_merge - About to update the template within additionals objects..."
+  local error=$(yq eval-all -i -e '. as $item ireduce ({}; . *+ $item)' $FILE $filename 2>&1 > /dev/null)
+  if [[ $? -ne 0 ]]; then
+    error_handler "$error"
   else
-    error=$(<errors.txt)
-    error="${error//\"/\'}"
-    printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "err" "$error"
-    # scale_down
+    printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "template_merge - the Service Monitor object was added successfully to the template: $FILE"
   fi
 }
 
 # extract /opt/dedalus/templates/*.yml files into local folder
-extract_template_files
+# extract_template_files
 #
-# ::: METRICS - step 1 - Discovery the Service Monitor template's file name
+# ::: METRICS - Discovery the Service Monitor template
 #
-# set to default filename if it found
-if [[ -z "$TEMPLATE_SVCMONITOR_FILENAME" && -f dedalus.servicemonitor.yml ]]; then
-    create_object "dedalus.servicemonitor.yml"
-# set the filename to the user defined
-elif [[ -f "$TEMPLATE_SVCMONITOR_FILENAME" ]]; then
-    create_object "$TEMPLATE_SVCMONITOR_FILENAME"
+# The Service Monitor object is already defined within the main template
+if $(yq -e e '.objects[] | select(.kind == "ServiceMonitor").metadata.name' $FILE &>/dev/null); then
+  printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "The Service Monitor object is already preset within the: $FILE"
 else
-    #
-    # ::: METRICS - step 2 - Discovery wheather the Service Monitor object is already defined within the main template
-    #
-    # unset SVCMONITOR_FILE
-    # printf '{"@timestamp":"%s","level":"%s","message":"%s%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "warn" "The Service Monitor template wasn't found"
-    # Check wheather the ServiceMonitor object definition already exists within the main template file
-    if $(yq -e e '.objects[] | select(.kind == "ServiceMonitor").metadata.name' $FILE &>/dev/null); then
-      printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "info" "The Service Monitor object is already set within the: " $FILE
+  # set to either the user's defined if defined or the default filename and check wheather is a regular file.
+  if [[ -f "${TEMPLATE_SVCMONITOR_FILENAME:=dedalus.servicemonitor.yml}" ]]; then
+    template_merge "$TEMPLATE_SVCMONITOR_FILENAME"
+  else
+    printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "warn" "The variable: 'TEMPLATE_SVCMONITOR_FILENAME' was empty or the specified file was not found: $TEMPLATE_SVCMONITOR_FILENAME"
+    # The Service Monitor object is not already defined therefore a default settings will be added stricly if the 'service' object expose the port number 8080
+    error=$(yq -e e '.objects[] | select(.kind == "Service").spec.ports[]| select(.port == "8080").port' $FILE 2>&1 > /dev/null)
+    if [[ $? -ne 0 ]]; then
+      error_handler "$error"
     else
-      #
-      # ::: METRICS - step 3 - Build and Append the Service Monitor to the main template automatically
-      #
-      # it will be added if the service object expose the port number 8080
-      if $(yq -e e '.objects[] | select(.kind == "Service").spec.ports[].port' $FILE | grep 8080 &>/dev/null); then
-        printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "warn" "The Service Monitor has NOT been set. THE DEFAULT ONE WILL BE CREATED!"
-        local serviceport_name=$(yq -e e '.objects[] | select(.kind == "Service").spec.ports[]| select(.port == "8080").name' $FILE)
-        build_servicemonitor "$FILE" "$serviceport_name"
-        # create_object "dedalus.servicemonitor.default.yml"
-      fi
+      printf '{"@timestamp":"%s","level":"%s","message":"%s"}\n' "$(date -u +'%FT%T.%3N%:z')" "warn" "The Service Monitor has NOT been set. THE DEFAULT ONE WILL BE CREATED!"
+      serviceport_name=$(yq -e e '.objects[] | select(.kind == "Service").spec.ports[]| select(.port == "8080").name' $FILE)
+      build_servicemonitor "$FILE" "$serviceport_name"
     fi
+  fi
 fi
 # ::: METRICS - END
