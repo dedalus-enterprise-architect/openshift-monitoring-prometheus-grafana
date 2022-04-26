@@ -7,9 +7,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    k8s-app: ${APP_NAME}-servicemonitor
-  name: ${APP_NAME}-servicemonitor
-  namespace: ${NAMESPACE}
+    app: ${APP_NAME}
+    k8s-app: ${APP_NAME}
+  name: ${APP_NAME}-8080-tcp
 spec:
   endpoints:
     - interval: 30s
