@@ -153,18 +153,18 @@ The directories tree:
 
 - deploy:
     - dashboards:
+      - standalone:
+        - grafana.dashboard.jvm.advanced.yml
+        - grafana.dashboard.jvm.basic.yml
       - grafana.dashboard.jvm.basic.json
       - grafana.dashboard.jvm.basic.yml
       - grafana.dashboard.jvm.json
       - grafana.dashboard.jvm.yml
-      - standalone:
-        - grafana.dashboard.jvm.advanced.yml
-        - grafana.dashboard.jvm.basic.yml
     - grafana
       - patch-grafana.json
       - patch-grafana.yml
     - servicemonitor
-      - servicemonitors.template.yml
+      - dedalus.servicemonitor.yml
     - templates
       - dashboard.template.env
       - dashboard.template.yml
@@ -184,7 +184,7 @@ This folder includes the templates used for:
 
 ### servicemonitor
 
-> ```deploy/servicemonitor/servicemonitors.template.yml```
+> ```deploy/servicemonitor/dedalus.servicemonitor.yml```
 
 For each POD which exposes the metrics has to be created a "ServiceMonitor" object.
 
