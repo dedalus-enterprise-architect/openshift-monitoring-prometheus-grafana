@@ -7,7 +7,7 @@
                         "key": "app",
                         "operator": "In",
                         "values": [
-                            "grafana"
+                            "grafana-dedalus"
                         ]
                     }
                 ]

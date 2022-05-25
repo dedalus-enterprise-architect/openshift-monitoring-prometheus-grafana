@@ -96,17 +96,14 @@ By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below sn
         - key: app
           operator: In
           values:
-            - grafana
+            - grafana-dedalus
 ```
 
-Make the command to run depending by the template used before. Therefore replace the placeholder: "@type_here_the_grafana_instance_name@":
-  - with 'grafana-persistent-oauth' if you used the template: 'grafanaoperator.template.yml'
-  - with 'grafana-basic' if you used the template: 'grafanaoperator.template.basic.yml'
-
-and run:
+It follow the command check to run:
 
 ```bash
-oc get grafana @type_here_the_grafana_instance_name@ --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
+oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) \
+  --no-headers -n @type_here_the_namespace@ -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
 ```
 
 afterward check that the output looks like as follow:
@@ -115,10 +112,10 @@ afterward check that the output looks like as follow:
 
 otherwise update the object by running the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
 
-      oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge \
+      oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) --type merge \
        --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
        -n @type_here_the_namespace@
-
+       
 **IMPORTANT**: Use the merge type when patching the CRD object.
 
 ### Dashboard objects and its dependencies creation using a template
