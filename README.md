@@ -29,7 +29,7 @@ Before start you must choose the rights template:
 
 It follows the step by step commands to install the Grafana Operator as well:
 
-* Process the template on fly by passing the parameters inline:
+1. Process the template on fly by passing the parameters inline:
 
       oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
         -p DASHBOARD_NAMESPACES_ALL=true \
@@ -43,7 +43,7 @@ It follows the step by step commands to install the Grafana Operator as well:
         -p NAMESPACE=dedalus-monitoring \
         | oc -n dedalus-monitoring create -f -
 
-* Approve the Operator's updates by patching the __InstallPlan__ :
+2. Approve the Operator's updates by patching the __InstallPlan__ :
 
       oc patch InstallPlan/$(oc get --no-headers  InstallPlan|grep grafana-operator|cut -d' ' -f1) --type merge \
        --patch='{"spec":{"approved":true}}' -n @type_here_the_namespace@
@@ -61,15 +61,15 @@ and pay attention in case you wanted deleting any previously created objects at 
     oc delete ClusterRoleBinding grafana-proxy-@type_here_the_namespace@
     oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
 
-#### Enabling the dashboards automatic discovery how to
+#### Enabling the dashboards automatic discovery how to - OPTIONAL
 
 > Consider this section as an *OPTIONAL* task because this feature is enabled by default
 
-The dashboards can be loaded from:
+The dashboards can be loaded in several ways as explained below:
 
-1. within the same namespace where the operator is deployed in
+* within the same namespace where the operator is deployed in
 
-1. any namespace when the *scan-all* feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/blob/master/documentation/multi_namespace_support.md))
+* any namespace when the *scan-all* feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/blob/master/documentation/multi_namespace_support.md))
 
 The operator can import dashboards from either one, some or all namespaces. By default, it will only look for dashboards in its own namespace.
 By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below snippet of code, the operator can watch for dashboards in other namespaces.
@@ -96,29 +96,26 @@ By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below sn
         - key: app
           operator: In
           values:
-            - grafana
+            - grafana-dedalus
 ```
 
-Make the command to run depending by the template used before. Therefore replace the placeholder: "@type_here_the_grafana_instance_name@":
-  - with 'grafana-persistent-oauth' if you used the template: 'grafanaoperator.template.yml'
-  - with 'grafana-basic' if you used the template: 'grafanaoperator.template.basic.yml'
-
-and run:
+It follow the command check to run after you've replaced the "__@type_here_the_namespace@__" placeholder by the one where the Grafana Operator was installed:
 
 ```bash
-oc get grafana @type_here_the_grafana_instance_name@ --no-headers -n dedalus-monitoring -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
+oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) \
+  --no-headers -n @type_here_the_namespace@ -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
 ```
 
 afterward check that the output looks like as follow:
 
     grafana-dedalus
 
-otherwise update the object by running the following command but only after you have replaced the placeholder = "__@type_here_the_namespace@__" by the one where the Grafana Operator was installed:
+otherwise update the object by running the following command but only after you've replaced the  "__@type_here_the_namespace@__" placeholder by the one where the Grafana Operator was installed:
 
-      oc patch grafana/$(oc get --no-headers  grafana/dedalus-grafana |cut -d' ' -f1) --type merge \
+      oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) --type merge \
        --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
        -n @type_here_the_namespace@
-
+       
 **IMPORTANT**: Use the merge type when patching the CRD object.
 
 ### Dashboard objects and its dependencies creation using a template
@@ -153,18 +150,18 @@ The directories tree:
 
 - deploy:
     - dashboards:
+      - standalone:
+        - grafana.dashboard.jvm.advanced.yml
+        - grafana.dashboard.jvm.basic.yml
       - grafana.dashboard.jvm.basic.json
       - grafana.dashboard.jvm.basic.yml
       - grafana.dashboard.jvm.json
       - grafana.dashboard.jvm.yml
-      - standalone:
-        - grafana.dashboard.jvm.advanced.yml
-        - grafana.dashboard.jvm.basic.yml
     - grafana
       - patch-grafana.json
       - patch-grafana.yml
     - servicemonitor
-      - servicemonitors.template.yml
+      - dedalus.servicemonitor.yml
     - templates
       - dashboard.template.env
       - dashboard.template.yml
@@ -184,7 +181,7 @@ This folder includes the templates used for:
 
 ### servicemonitor
 
-> ```deploy/servicemonitor/servicemonitors.template.yml```
+> ```deploy/servicemonitor/dedalus.servicemonitor.yml```
 
 For each POD which exposes the metrics has to be created a "ServiceMonitor" object.
 
