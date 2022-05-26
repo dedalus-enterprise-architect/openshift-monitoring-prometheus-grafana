@@ -31,35 +31,45 @@ It follows the step by step commands to install the Grafana Operator as well:
 
 1. Process the template on fly by passing the parameters inline:
 
-      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
-        -p DASHBOARD_NAMESPACES_ALL=true \
-        -p NAMESPACE=@type_here_the_namespace@ \
-        -p STORAGECLASS=@type_here_the_custom_storageclass@ \
-        | oc -n @type_here_the_namespace@ create -f -
+```
+   oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
+     -p DASHBOARD_NAMESPACES_ALL=true \
+     -p NAMESPACE=@type_here_the_namespace@ \
+     -p STORAGECLASS=@type_here_the_custom_storageclass@ \
+     | oc -n @type_here_the_namespace@ create -f -
+```
 
   where below is shown the command with the placeholder: '**@type_here_the_namespace@**' replaced by the value: 'dedalus-monitoring' and the others parameters have been omitted to load the default settings:
 
-      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
-        -p NAMESPACE=dedalus-monitoring \
-        | oc -n dedalus-monitoring create -f -
+```
+   oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
+     -p NAMESPACE=dedalus-monitoring \
+     | oc -n dedalus-monitoring create -f -
+```
 
 2. Approve the Operator's updates by patching the __InstallPlan__ :
 
-      oc patch InstallPlan/$(oc get --no-headers  InstallPlan|grep grafana-operator|cut -d' ' -f1) --type merge \
-       --patch='{"spec":{"approved":true}}' -n @type_here_the_namespace@
+```
+   oc patch InstallPlan/$(oc get --no-headers  InstallPlan|grep grafana-operator|cut -d' ' -f1) --type merge \
+    --patch='{"spec":{"approved":true}}' -n @type_here_the_namespace@
+```
 
 > Check Objects
 
 you can get a list of the created objects as follows:
 
-    oc get all,ConfigMap,Secret,Grafana,OperatorGroup,Subscription,GrafanaDataSource,GrafanaDashboard,ClusterRole,ClusterRoleBinding \
-    -l app=grafana-dedalus --no-headers -n **@type_here_the_namespace@** |cut -d' ' -f1
+```
+   oc get all,ConfigMap,Secret,Grafana,OperatorGroup,Subscription,GrafanaDataSource,GrafanaDashboard,ClusterRole,ClusterRoleBinding \
+   -l app=grafana-dedalus --no-headers -n **@type_here_the_namespace@** |cut -d' ' -f1
+```
 
 and pay attention in case you wanted deleting any previously created objects at __cluster level__
 
-    oc delete ClusterRole grafana-proxy-@type_here_the_namespace@
-    oc delete ClusterRoleBinding grafana-proxy-@type_here_the_namespace@
-    oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
+```
+   oc delete ClusterRole grafana-proxy-@type_here_the_namespace@
+   oc delete ClusterRoleBinding grafana-proxy-@type_here_the_namespace@
+   oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
+```
 
 #### Enabling the dashboards automatic discovery how to - OPTIONAL
 
@@ -102,8 +112,8 @@ By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below sn
 It follow the command check to run after you've replaced the "__@type_here_the_namespace@__" placeholder by the one where the Grafana Operator was installed:
 
 ```bash
-oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) \
-  --no-headers -n @type_here_the_namespace@ -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
+  oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) \
+    --no-headers -n @type_here_the_namespace@ -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
 ```
 
 afterward check that the output looks like as follow:
@@ -112,9 +122,11 @@ afterward check that the output looks like as follow:
 
 otherwise update the object by running the following command but only after you've replaced the  "__@type_here_the_namespace@__" placeholder by the one where the Grafana Operator was installed:
 
-      oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) --type merge \
-       --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
-       -n @type_here_the_namespace@
+```
+  oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) --type merge \
+   --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
+   -n @type_here_the_namespace@
+```
        
 **IMPORTANT**: Use the merge type when patching the CRD object.
 
@@ -124,23 +136,29 @@ With the following commands you create the *dashboards presets* including its de
 
 * Passing the parameters inline:
 
-      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@)" \
-        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-        | oc -n @type_here_the_namespace@ create -f -
+```
+  oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
+    -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@)" \
+    -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
+    | oc -n @type_here_the_namespace@ create -f -
+```
 
 
   where below is shown the command with the placeholder: '**@type_here_the_namespace@**' replaced by the value: 'dedalus-monitoring':
 
-      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-        -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
-        -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-        | oc -n dedalus-monitoring create -f -
+```
+  oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
+    -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
+    -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
+    | oc -n dedalus-monitoring create -f -
+```
 
 > it follows an alternative way to manage multiple parameters to pass in using an env file as input:
 
-      oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-        --param-file=dashboard.template.env | oc create -n @type_here_the_namespace@ -f -
+```
+  oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
+    --param-file=dashboard.template.env | oc create -n @type_here_the_namespace@ -f -
+```
   
   but don't forget to adjust the values within the file: __templates/dashboard.template.env__ before proceed.
 
