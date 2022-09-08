@@ -24,6 +24,9 @@ References:
       - [Thanos-Tenancy](#thanos-tenancy)
         - [Prerequisites for Thanos-Tenancy](#prerequisites-for-thanos-tenancy)
         - [How to install DataSource to Thanos-Tenancy](#how-to-install-datasource-to-thanos-tenancy)
+    - [Grafana Dashboard](#grafana-dashboard)
+      - [Prerequisites](#prerequisites)
+      - [How to install](#how-to-install)
     - [Creating the Operator's objects](#creating-the-operators-objects)
       - [Enabling the dashboards automatic discovery how to - OPTIONAL](#enabling-the-dashboards-automatic-discovery-how-to---optional)
   - [Grafana operator: Installing the predefined dashboards](#grafana-operator-installing-the-predefined-dashboards)
@@ -327,28 +330,15 @@ otherwise update the object by running the following command but only after you'
 
 **IMPORTANT**: Use the merge type when patching the CRD object.
 
-### How to install
+#### How to install
 
-With the following commands you create the *dashboards presets* including its dependencies objects as well:
+Non ho avuto modo di lavorare molto sulle dashboard ma vi dico cosa ho usato per i test:
 
-* Passing the parameters inline:
+il file ./deploy/dashboards/standalone/grafana.dashboard.jvm.selectable.yml è quella che ho usato per i test
+è basato sul file ./deploy/dashboards/grafana_dashboard_selectable.json che ho creato esportando la dashboard da grafana.
 
-```
-  oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-    -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@)" \
-    -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-    | oc -n @type_here_the_namespace@ create -f -
-```
-
-
-  where below is shown the command with the placeholder: '**@type_here_the_namespace@**' replaced by the value: 'dedalus-monitoring':
-
-```
-  oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-    -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
-    -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-    | oc -n dedalus-monitoring create -f -
-```
+Le prove le avevo fatte partendo dalla dashboard basic quindi bisogna fare delle modifiche a quella advanced
+quello che avevo fatto sulle dashboard da grafana è stato eliminare la definizione del Datasource e renderlo una variabile.
 
 ##########################################
 ##########################################
