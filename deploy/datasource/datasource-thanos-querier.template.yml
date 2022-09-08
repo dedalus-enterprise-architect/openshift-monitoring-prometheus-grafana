@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: dedalus-grafana-template
+metadata:
+  annotations:
+    description: |-
+      Grafana dashboard definition about the JVM without persistent storage.
+      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/master/README.md.
+    iconClass: icon-d4center
+    tags: dedalus-grafana,dedalus
+  name: dedalus-grafana
+objects:
+# :::
+# ::: cluster role binding: give the RBAC cluster-monitoring-view permission to the grafana-serviceaccount
+# :::
+# - apiVersion: authorization.openshift.io/v1
+#   kind: ClusterRoleBinding
+#   metadata:
+#     name: grafana-cluster-monitoring-view-binding
+#     labels:
+#       app: grafana-dedalus
+#   subjects:
+#   - kind: ServiceAccount
+#     name: grafana-serviceaccount
+#     namespace: dedalus-monitoring
+#   roleRef:
+#     kind: ClusterRole
+#     name: cluster-monitoring-view
+#     apiGroup: rbac.authorization.k8s.io
+# :::
+# ::: Grafana Data Source
+# :::
+- apiVersion: integreatly.org/v1alpha1
+  kind: GrafanaDataSource
+  metadata:
+    name: prometheus-grafana-ds
+    labels:
+      app: grafana-dedalus
+  spec:
+    datasources:
+      - access: proxy
+        editable: true
+        isDefault: true
+        jsonData:
+          httpHeaderName1: Authorization
+          timeInterval: 5s
+          tlsSkipVerify: true
+        name: Thanos-Querier
+        secureJsonData:
+          httpHeaderValue1: >-
+            Bearer ${TOKEN_BEARER}
+        type: prometheus
+        url: 'https://${THANOS_QUERIER_URL}'
+    name: prometheus-grafana-ds.yml
+parameters:
+- name: TOKEN_BEARER
+  displayName: Openshift Token Bearer
+  description: Type the Openshift Token
+  required: true
+  value:
+- name: THANOS_QUERIER_URL
+  displayName: Thanos Querier URL
+  description: Type the Thanos querier URL (https://thanos-querier.namespace.svc.cluster.local:9091)
+  required: true
+  value:

@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: dedalus-grafanaoperator-template
+metadata:
+  annotations:
+    description: |-
+      Grafana Operator definition with ephemeral storage.
+      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/master/README.md.
+    iconClass: icon-d4center
+    tags: dedalus-grafanaoperator,dedalus
+  name: dedalus-grafanaoperator
+objects:
+# :::
+# ::: It creates the Grafana instance with the following features:
+# :::   - ephemeral storage
+# :::   - basic authentication
+# :::
+- apiVersion: integreatly.org/v1alpha1
+  kind: Grafana
+  metadata:
+    name: grafana-basic
+    labels:
+      app: grafana-dedalus
+  spec:
+    client:
+      preferService: true
+    config:
+      log:
+        level: warn
+        mode: console
+      auth.anonymous:
+        enabled: False
+      auth:
+        disable_login_form: false
+        disable_signout_menu: false
+      auth.basic:
+        enabled: true
+    dashboardLabelSelector:
+      - matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - grafana-dedalus
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1000Mi
+      requests:
+        cpu: 50m
+        memory: 200Mi
+# :::
+# ::: It needed for Grafana Administrator Login getting the credentials from the secret: "grafana-admin-credentials"
+# :::
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: grafana-basic-admin
+    labels:
+      app: grafana-dedalus
+  spec:
+    port:
+      targetPort: grafana
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+    to:
+      kind: Service
+      name: grafana-service
+parameters:
+- name: NAMESPACE
+  displayName: Namespace where the grafana Operator will be installed in
+  description: Type the Namespace where the grafana Operator will be installed in
+  required: true
+  value: dedalus-monitoring
