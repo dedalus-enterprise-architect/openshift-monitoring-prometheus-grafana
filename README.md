@@ -187,7 +187,7 @@ One way to do it is the following:
 
 ```bash
 
-oc process -f deploy/grafana/grafana-cluster-monitoring-view-binding_template.yml | \
+oc process -f rbac/grafana-cluster-monitoring-view-binding_template.yml | \
 oc create -f -
 ```
 
