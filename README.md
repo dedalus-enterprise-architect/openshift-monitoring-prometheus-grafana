@@ -38,7 +38,7 @@ References:
 
 ## Installation
 
-This is the procedure to install the Grafana Operator, to instantiate a working grafana instance and to configure a grafana datasource and bashboard, the following components will be installed and configured:
+This procedure is going to install the Grafana Operator, to instantiate a working grafana instance, to configure a grafana datasource and dashboard; the following components will be installed and configured:
 
 1. Grafana Operator
 2. Grafana Operator RBAC
@@ -46,7 +46,7 @@ This is the procedure to install the Grafana Operator, to instantiate a working 
 4. Grafana Datasource
 5. Grafana Dashboard
 
-* All this object will be described in details in their own section  
+* All this object will be described in details in their own section
 * Different ClusterRoles and Bindings will be added to be compliant with different scenario
 * This installation is trying to cover a scenario where a tenancy segregation is required and one where is not
 * Each command will explain the user level that you need to compelte that command
@@ -56,7 +56,12 @@ This is the procedure to install the Grafana Operator, to instantiate a working 
 On your client
 
 1. install the OpenShift CLI tool
-2. clone the grafana-resources repo in your current working folder
+2. clone the *grafana-resources* repo in your current working folder
+
+On OpenShift
+
+1. create a dedicated namespace (ex. *dedalus-monitoring*)
+2. create a dedicated user (ex. *monitoring-user*)
 
 ### Grafana Operator
 
@@ -70,19 +75,27 @@ In this section we are going to install the Grafana Operator itself, the followi
   * "installPlanApproval": Manual
 * ServiceAccount
 
-```bash
-#Here I set the value of the parameter using a variable on a linux system
+Set the following variables and deploy the operator
 
+```bash
 NAMESPACE=dedalus-monitoring
 DASHBOARD_NAMESPACES_ALL=true
 
-oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/operator/grafanaoperator.template.yml \
+oc process -f grafana-resources/deploy/operator/grafanaoperator.template.yml \
 -p DASHBOARD_NAMESPACES_ALL=$DASHBOARD_NAMESPACES_ALL \
 -p NAMESPACE=$NAMESPACE \
 | oc -n $NAMESPACE create -f -
 ```
 
-Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
+The output should be
+
+```bash
+operatorgroup.operators.coreos.com/grafana-operator-group created
+subscription.operators.coreos.com/grafana-operator created
+serviceaccount/grafana-serviceaccount created
+```
+
+*grafanaoperator.template.yml* contains the following parameters:
 
 ```yaml
 parameters:
@@ -98,18 +111,16 @@ parameters:
   value: "true"
 ```
 
-Here the output of the previous command:
+Now you have installed all the objects needed by the operator but you need to approve "installPlanApproval", so run:
 
 ```bash
-operatorgroup.operators.coreos.com/grafana-operator-group created
-subscription.operators.coreos.com/grafana-operator created
-serviceaccount/grafana-serviceaccount created
+oc patch installplan $(oc get ip -n $NAMESPACE -o=jsonpath='{.items[?(@.spec.approved==false)].metadata.name}') -n $NAMESPACE --type merge --patch '{"spec":{"approved":true}}'
 ```
 
-Now you have installed all the objets needed by the operator but you need to approve "installPlanApproval", to do it follow these steps:
+The output should be
 
 ```bash
-oc patch InstallPlan/$(oc get --no-headers  InstallPlan|grep grafana-operator|cut -d' ' -f1) --type merge --patch='{"spec":{"approved":true}}' -n $NAMESPACE
+installplan.operators.coreos.com/install-xxxxx patched
 ```
 
 The InstallPlan is set to Manual to avoid automatic update on versions that are not tested, please remember that new versions could NOT work as expected.
