@@ -4,7 +4,7 @@ This project explain how to Set Up a custom Grafana instance having the followin
 
  * Grafana Operator - community edition starting from version 4.2.0
  
- * Openshift 4.9 or major
+ * OpenShift/OKD 4.9 or higher
 
 References:
   * https://github.com/grafana-operator/grafana-operator
