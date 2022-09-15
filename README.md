@@ -168,7 +168,7 @@ Set the following variable and deploy the operator
 NAMESPACE=dedalus-monitoring
 
 oc project $NAMESPACE
-oc process -f grafana-resources/deploy/grafana/instance-basic.template.yml \
+oc process -f grafana-resources/deploy/grafana/instance_oauth.template.yml \
 -p NAMESPACE=$NAMESPACE \
 | oc -n $NAMESPACE create -f -
 ```
@@ -176,8 +176,9 @@ oc process -f grafana-resources/deploy/grafana/instance-basic.template.yml \
 Expected output
 
 ```bash
-grafana.integreatly.org/grafana-basic created
-route.route.openshift.io/grafana-basic-admin created
+grafana.integreatly.org/grafana-persistent-oauth created
+route.route.openshift.io/grafana-persistent-oauth-access created
+route.route.openshift.io/grafana-persistent-oauth-admin created
 ```
 
 *grafanaoperator_instance_oauth.template.yml* contains the following parameters:
@@ -251,7 +252,6 @@ parameters:
 
 ```bash
 NAMESPACE=dedalus-monitoring
-
 
 oc process -f grafana-resources/deploy/datasource/datasource-thanos-querier_template.yml \
 -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $NAMESPACE)" \
