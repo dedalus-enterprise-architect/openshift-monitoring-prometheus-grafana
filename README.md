@@ -117,7 +117,7 @@ Now you have installed all the objects needed by the operator but you need to ap
 oc patch installplan $(oc get ip -n $NAMESPACE -o=jsonpath='{.items[?(@.spec.approved==false)].metadata.name}') -n $NAMESPACE --type merge --patch '{"spec":{"approved":true}}'
 ```
 
-The output should be
+Expected output
 
 ```bash
 installplan.operators.coreos.com/install-xxxxx patched
@@ -129,16 +129,20 @@ The InstallPlan is set to Manual to avoid automatic update on versions that are 
 
 > :warning: **You need Cluster Admin role for this section**
 
-This section will create aggregated permissions needed to manage the new objects created by Grafana Operator.
-
-This steps will let to admin/view the new objects by users with no Cluster Admin permissions.
-
-Use these command to create the needed objects:
+This section will create aggregated permissions needed to manage the new objects created by Grafana Operator, so non-admin users can manage and view the objects.
+Create RBAC objects by running
 
 ```bash
-oc create -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/rbac/aggregate-grafana-admin-edit.yml
+oc create -f grafana-resources/rbac/aggregate-grafana-admin-edit.yml
 
-oc create -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/rbac/aggregate-grafana-admin-view.yml
+oc create -f grafana-resources/rbac/aggregate-grafana-admin-view.yml
+```
+
+Expected output
+
+```bash
+clusterrole.rbac.authorization.k8s.io/aggregate-grafana-admin-edit created
+clusterrole.rbac.authorization.k8s.io/aggregate-grafana-view created
 ```
 
 ### Grafana Instance
@@ -150,25 +154,33 @@ oc create -f https://raw.githubusercontent.com/dedalus-enterprise-architect/graf
 
 Before start you must choose the rights template:
 
-* **deploy\grafana\grafanaoperator_instance_basic.template.yml** : this template aims is installing the Grafana Operator without the following features:
+* **deploy/grafana/instance_basic.template.yml** : this template aims is installing the Grafana Operator without the following features:
   * ephemeral storage
   * basic login
 
-* **deploy\grafana\grafanaoperator_instance_oauth.template.yml** : this template aims is installing the Grafana Operator with the following features:
+* **deploy/grafana/instance_oauth.template.yml** : this template aims is installing the Grafana Operator with the following features:
   * persistent storage
   * oAuth Login (it allows the login by the same Openshift user data)
 
-```bash
-#Here I set the value of the parameter using a variable on a linux system
+Set the following variable and deploy the operator
 
+```bash
 NAMESPACE=dedalus-monitoring
 
-oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/grafanaoperator_instance_oauth.template.yml \
+oc project $NAMESPACE
+oc process -f grafana-resources/deploy/grafana/instance-basic.template.yml \
 -p NAMESPACE=$NAMESPACE \
 | oc -n $NAMESPACE create -f -
 ```
 
-Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
+Expected output
+
+```bash
+grafana.integreatly.org/grafana-basic created
+route.route.openshift.io/grafana-basic-admin created
+```
+
+*grafanaoperator_instance_oauth.template.yml* contains the following parameters:
 
 ```yaml
 parameters:
@@ -190,9 +202,12 @@ reference:
 <https://cloud.redhat.com/blog/thanos-querier-versus-thanos-querier>
 
 As described in the referenced link you are going to have 2 different endpoints as target for the datasource.
-Thanos on port 9091 that we are going to name Thanos-Querier and Thanos on porto 9092 that we are going to name Thanos-Tenancy.
+Thanos instance on port
 
-The main difference amon them is the kind of rbac needed to access the data.
+* 9091 named Thanos-Querier
+* 9092 named Thanos-Tenancy
+
+where the main difference between them is the kind of RBAC needed to access the data.
 
 ---
 
@@ -204,16 +219,20 @@ The main difference amon them is the kind of rbac needed to access the data.
 >  
 > * **Cluster Admin**  
 
-To be able to connect to Thanos-Querier, the service account ****grafana-serviceaccount****, needs to be able to perform a **get** to all **namespaces** to archive this objective you can assign the ClusterRole **cluster-monitoring-view** to the service account.
-One way to do it is the following:
+To be able to connect to Thanos-Querier, the service account **grafana-serviceaccount** needs to be able to perform a **get** to all **namespaces**. To achieve this you can assign the ClusterRole **cluster-monitoring-view** permission to the service account.
 
 ```bash
-
-oc process -f rbac/grafana-cluster-monitoring-view-binding_template.yml | \
+oc process -f grafana-resources/rbac/grafana-cluster-monitoring-view-binding_template.yml | \
 oc create -f -
 ```
 
-Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
+Expected output
+
+```bash
+clusterrolebinding.rbac.authorization.k8s.io/grafana-cluster-monitoring-view-binding created
+```
+
+*grafana-cluster-monitoring-view-binding_template.yml* contains the following parameters:
 
 ```yaml
 parameters:
@@ -234,8 +253,8 @@ parameters:
 NAMESPACE=dedalus-monitoring
 
 
-oc process -f deploy/datasource/datasource-thanos-querier_template.yml \
--p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
+oc process -f grafana-resources/deploy/datasource/datasource-thanos-querier_template.yml \
+-p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $NAMESPACE)" \
 -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
 | oc -n ${NAMESPACE} create -f -
 ```
