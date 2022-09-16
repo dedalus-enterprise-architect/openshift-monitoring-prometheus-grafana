@@ -258,6 +258,7 @@ oc process -f grafana-resources/deploy/datasource/datasource-thanos-querier_temp
 -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
 | oc -n ${NAMESPACE} create -f -
 ```
+> :warning: **Permessi insufficienti per oc get route:**
 
 Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
 
@@ -289,10 +290,13 @@ The port 9092 is not exposed by default from openshift so the first step is to b
 One way to do it is the following:
 
 ```bash
-oc create -f deploy/datasource/route-thanos-tenancy.yml
+oc create -f grafana-resources/deploy/datasource/route-thanos-tenancy.yml
 ```
 
 The second step is to give the right rbac to the **serviceaccount** ****grafana-serviceaccount****, in this case it will need permission as viewver on the target namespace:
+
+> :warning: **Target namespace ignoto**
+
 
 ```bash
 TARGET_NAMESPACE=@TARGET_NAMESPACE@
@@ -312,12 +316,14 @@ NAMESPACE=dedalus-monitoring
 TARGET_NAMESPACE=@target_namespace@
 
 
-oc process -f deploy/datasource/datasource-thanos-querier_template.yml \
+oc process -f grafana_resources/deploy/datasource/datasource-thanos-querier_template.yml \
 -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
 -p THANOS_QUERIER_URL=$(oc get route thanos-tenancy -n openshift-monitoring -o json | jq -r .spec.host) \
 -p TARGET_NAMESPACE=${TARGET_NAMESPACE}
 | oc -n ${NAMESPACE} create -f -
 ```
+> :warning: **Permessi insufficienti per oc get route:**
+
 
 Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
 
