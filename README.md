@@ -293,7 +293,7 @@ One way to do it is the following:
 oc create -f grafana-resources/deploy/datasource/route-thanos-tenancy.yml
 ```
 
-The second step is to give the right rbac to the **serviceaccount** ****grafana-serviceaccount****, in this case it will need permission as viewver on the target namespace:
+The second step is to give the right rbac to the service account **grafana-serviceaccount**, in this case it will need permission as viewer on the target namespace:
 
 > :warning: **Target namespace ignoto**
 
