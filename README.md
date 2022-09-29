@@ -9,12 +9,15 @@ References:
 
 * <https://github.com/grafana-operator/grafana-operator>
 
+---
+---
+---
 ## Index
 
 - [Grafana Operator Resources](#grafana-operator-resources)
   - [Index](#index)
-  - [Installation:](#installation)
-    - [Prerequisites](#prerequisites)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
     - [Grafana Operator](#grafana-operator)
     - [Grafana Operator RBAC](#grafana-operator-rbac)
     - [Grafana Instance](#grafana-instance)
@@ -30,30 +33,32 @@ References:
     - [Grafana Dashboard](#grafana-dashboard)
       - [Prerequisites](#prerequisites-1)
       - [How to install](#how-to-install)
-- [##########################################](#)
-    - [Grafana Instance](#grafana-instance-1)
-    - [Grafana Datasource](#grafana-datasource-1)
-      - [Thanos-Querier](#thanos-querier-1)
-        - [RBAC for Thanos-Querier](#rbac-for-thanos-querier-1)
-        - [How to install DataSource to Thanos-Querier](#how-to-install-datasource-to-thanos-querier-1)
-      - [Thanos-Tenancy](#thanos-tenancy-1)
-        - [Prerequisites for Thanos-Tenancy](#prerequisites-for-thanos-tenancy-1)
-        - [How to install DataSource to Thanos-Tenancy](#how-to-install-datasource-to-thanos-tenancy-1)
-    - [Grafana Dashboard](#grafana-dashboard-1)
-      - [Prerequisites](#prerequisites-2)
-      - [How to install](#how-to-install-1)
-    - [Creating the Operator's objects](#creating-the-operators-objects)
-      - [Enabling the dashboards automatic discovery how to - OPTIONAL](#enabling-the-dashboards-automatic-discovery-how-to---optional)
-  - [Grafana operator: Installing the predefined dashboards](#grafana-operator-installing-the-predefined-dashboards)
-    - [Pre-Requisites](#pre-requisites)
-    - [Dashboard objects and its dependencies creation using a template](#dashboard-objects-and-its-dependencies-creation-using-a-template)
+- [To be reworked](#to-be-reworked)
+  - [Check Objects](#check-objects)
+  - [Enabling the dashboards automatic discovery how to - OPTIONAL](#enabling-the-dashboards-automatic-discovery-how-to---optional)
   - [Project's Contents](#projects-contents)
     - [dashboards](#dashboards)
     - [servicemonitor](#servicemonitor)
     - [templates](#templates)
-    - [Useful commands](#useful-commands)
+  - [Useful commands](#useful-commands)
 
-## Installation:
+---
+---
+## Prerequisites
+
+On your client
+
+1. install the OpenShift CLI tool
+2. clone the *grafana-resources* repo in your current working folder
+
+On OpenShift
+
+1. create a dedicated namespace (ex. *dedalus-monitoring*)
+2. create a dedicated user (ex. *monitoring-user*)
+
+---
+---
+## Installation
 This is the procedure to install the Grafana Operator, to instantiate a working grafana instance and to configure a grafana datasource and bashboard, the following components will be installed and configured:
 
 1. Grafana Operator
@@ -67,17 +72,8 @@ This is the procedure to install the Grafana Operator, to instantiate a working 
 * This installation is trying to cover a scenario where a tenancy segregation is required and one where is not
 * Each command will explain the user level that you need to compelte that command
 
-### Prerequisites
-
-On your client
-
-1. install the OpenShift CLI tool
-2. clone the *grafana-resources* repo in your current working folder
-
-On OpenShift
-
-1. create a dedicated namespace (ex. *dedalus-monitoring*)
-2. create a dedicated user (ex. *monitoring-user*)
+---
+---
 
 ### Grafana Operator
 
@@ -141,6 +137,9 @@ installplan.operators.coreos.com/install-xxxxx patched
 
 The InstallPlan is set to Manual to avoid automatic update on versions that are not tested, please remember that new versions could NOT work as expected.
 
+---
+---
+
 ### Grafana Operator RBAC
 
 > :warning: **You need Cluster Admin role for this section**
@@ -161,6 +160,9 @@ clusterrole.rbac.authorization.k8s.io/aggregate-grafana-admin-edit created
 clusterrole.rbac.authorization.k8s.io/aggregate-grafana-view created
 ```
 
+---
+---
+
 ### Grafana Instance
 
 Before start you must choose the rights template:
@@ -172,6 +174,8 @@ Before start you must choose the rights template:
 * **deploy/grafana/instance_oauth.template.yml** : this template aims is installing the Grafana Operator with the following features:
   * persistent storage
   * oAuth Login (it allows the login by the same Openshift user data)
+
+---
 
 #### Istance Basic
 
@@ -190,6 +194,7 @@ oc process -f grafana-resources/deploy/grafana/instance_basic.template.yml \
 | oc -n $NAMESPACE create -f -
 ```
 
+---
 #### Istance Oauth
 
 > :warning: **You can complete this step with the following permissions:**  
@@ -245,6 +250,9 @@ parameters:
   required: false
   value: 
 ```
+
+---
+---
 
 ### Grafana Datasource
 
@@ -421,10 +429,15 @@ parameters:
 ```
 
 ---
+---
 
 ### Grafana Dashboard
 
+Dashboards are resources used by the Grafana instance itself, you can create them on Openshift to automatically upload them into Grafana.
+This procedure will add 2 preconfigured dashboards to Grafana about Java Metrics.
 #### Prerequisites
+
+The Dashboard are imported following a matchExpression defined into the Grafana Instance resource that you have created previously.
 
 > NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
 
@@ -437,315 +450,58 @@ parameters:
             - grafana-dedalus
 ```
 
-It follow the command check to run after you've replaced the "**@type_here_the_namespace@**" placeholder by the one where the Grafana Operator was installed:
+It follow the command to check the configuration be aware you have to choose the **NAMESPACE** where you installed grafana
 
 ```bash
-  oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) \
-    --no-headers -n @type_here_the_namespace@ -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
+NAMESPACE=dedalus-monitoring
+  oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n ${NAMESPACE} |cut -d' ' -f1) \
+    --no-headers -n${NAMESPACE} -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
 ```
 
 afterward check that the output looks like as follow:
 
     grafana-dedalus
 
-otherwise update the object by running the following command but only after you've replaced the  "**@type_here_the_namespace@**" placeholder by the one where the Grafana Operator was installed:
+otherwise update the object by running the following command
 
 ```bash
-  oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) --type merge \
-   --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
-   -n @type_here_the_namespace@
+NAMESPACE=dedalus-monitoring
+  oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n ${NAMESPACE} |cut -d' ' -f1) --type merge \
+   --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/operator/patch-grafana.json)" \
+   -n ${NAMESPACE}
 ```
 
 **IMPORTANT**: Use the merge type when patching the CRD object.
 
 #### How to install
 
-Non ho avuto modo di lavorare molto sulle dashboard ma vi dico cosa ho usato per i test:
 
-il file ./deploy/dashboards/standalone/grafana.dashboard.jvm.selectable.yml è quella che ho usato per i test
-è basato sul file ./deploy/dashboards/grafana_dashboard_selectable.json che ho creato esportando la dashboard da grafana.
-
-Le prove le avevo fatte partendo dalla dashboard basic quindi bisogna fare delle modifiche a quella advanced
-quello che avevo fatto sulle dashboard da grafana è stato eliminare la definizione del Datasource e renderlo una variabile.
-
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-=======
-This section will create aggregated permissions needed to manage the new objects created by Grafana Operator.
-
-This steps will let to admin/view the new objects by users with no Cluster Admin permissions.
-
-Use these command to create the needed objects:
-
-```bash
-oc create -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/rbac/aggregate-grafana-admin-edit.yml
-
-oc create -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/rbac/aggregate-grafana-admin-view.yml
-```
-
-
-### Grafana Instance
-
-> :warning: **You can complete this step with the following permissions:**  
->  
-> * **Cluster Admin**  
-> * **Namespace Admin if the aggregate RBAC had been created**
-
-Before start you must choose the rights template:
-
-* __deploy\grafana\grafanaoperator_instance_basic.template.yml__ : this template aims is installing the Grafana Operator without the following features:
-  * ephemeral storage
-  * basic login
-
-* __deploy\grafana\grafanaoperator_instance_oauth.template.yml__ : this template aims is installing the Grafana Operator with the following features:
-  * persistent storage
-  * oAuth Login (it allows the login by the same Openshift user data)
-
-```bash
-#Here I set the value of the parameter using a variable on a linux system
-
-NAMESPACE=dedalus-monitoring
->>>>>>> 9c3a965478dd100f6bb400f3cc64001570f8b4d9
-
-oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/grafanaoperator_instance_oauth.template.yml \
--p NAMESPACE=$NAMESPACE \
-| oc -n $NAMESPACE create -f -
-```
-
-Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
-
-```yaml
-parameters:
-- name: NAMESPACE
-  displayName: Namespace where the grafana Operator will be installed in
-  description: Type the Namespace where the grafana Operator will be installed in
-  required: true
-  value: dedalus-monitoring
-- name: STORAGECLASS
-  displayName: Storage Class
-  description: Type the Storage Class available on the cluster, if empty the default storageclass will be used
-  required: false
-  value: 
-```
-
-### Grafana Datasource
-
-reference:
-https://cloud.redhat.com/blog/thanos-querier-versus-thanos-querier
-
-As described in the referenced link you are going to have 2 different endpoints as target for the datasource.
-Thanos on port 9091 that we are going to name Thanos-Querier and Thanos on porto 9092 that we are going to name Thanos-Tenancy.
-
-The main difference amon them is the kind of rbac needed to access the data.
-
----
-
-#### Thanos-Querier
-
-##### RBAC for Thanos-Querier
-
-> :warning: **You can complete this step with the following permissions:**  
->  
-> * **Cluster Admin**  
-
-To be able to connect to Thanos-Querier, the service account **__grafana-serviceaccount__**, needs to be able to perform a __get__ to all __namespaces__ to archive this objective you can assign the ClusterRole __cluster-monitoring-view__ to the service account.
-One way to do it is the following:
-
-```bash
-
-oc process -f grafana_resources/deploy/grafana/grafana-cluster-monitoring-view-binding_template.yml | \
-oc create -f -
-```
-
-Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
-
-```yaml
-parameters:
-- name: NAMESPACE
-  displayName: Namespace where the grafana Operator will be installed in
-  description: Type the Namespace where the grafana Operator will be installed in
-  required: true
-  value: dedalus-monitoring
-```
-
-##### How to install DataSource to Thanos-Querier
 > :warning: **You can complete this step with the following permissions:**  
 >
 > * **Namespace Admin**
 
+With the following commands you create the *dashboards presets* including its dependencies objects as well
+
 ```bash
 NAMESPACE=dedalus-monitoring
-
-
-oc process -f grafana_resources/deploy/datasource/datasource-thanos-querier_template.yml \
--p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
--p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-| oc -n ${NAMESPACE} create -f -
+  oc process -f grafana-resources/deploy/dashboards/dashboard.template.yml \
+    -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
+    -p THANOS_QUERIER_URL=@ask_to_the_cluster_admin@ \
+    | oc -n ${NAMESPACE} -f -
 ```
 
-Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
+> :warning: **This template will download the dashboard from the this own repository**
+> **If you need a local installation you can use the file in grafana-resources/deploy/dashboards/standalone**
 
-```yaml
-parameters:
-- name: TOKEN_BEARER
-  displayName: Openshift Token Bearer
-  description: Type the Openshift Token
-  required: true
-  value:
-- name: THANOS_QUERIER_URL
-  displayName: Thanos Querier URL
-  description: Type the Thanos querier URL
-  required: true
-  value:
-```
-
----
-
-#### Thanos-Tenancy
-
-##### Prerequisites for Thanos-Tenancy
-> :warning: **You can complete this step with the following permissions:**  
->  
-> * **Cluster Admin**
-
-The port 9092 is not exposed by default from openshift so the first step is to be sure to have a route to it,
-One way to do it is the following:
-
-```bash
-oc create -f grafana_resources/deploy/datasource/route-thanos-tenancy.yml
-```
-
-The second step is to give the right rbac to the __serviceaccount__ **__grafana-serviceaccount__**, in this case it will need permission as viewver on the target namespace:
-
-```bash
-TARGET_NAMESPACE=@TARGET_NAMESPACE@
-NAMESPACE=dedalus-monitoring
-
-oc adm policy add-role-to-user view system:serviceaccount:${NAMESPACE}:grafana-serviceaccount -n ${TARGET_NAMESPACE}
-```
-##### How to install DataSource to Thanos-Tenancy
-> :warning: **You can complete this step with the following permissions:**  
->
-> * **Namespace Admin**
-```bash
-NAMESPACE=dedalus-monitoring
-TARGET_NAMESPACE=@target_namespace@
-
-
-oc process -f grafana_resources/deploy/datasource/datasource-thanos-querier_template.yml \
--p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
--p THANOS_QUERIER_URL=$(oc get route thanos-tenancy -n openshift-monitoring -o json | jq -r .spec.host) \
--p TARGET_NAMESPACE=${TARGET_NAMESPACE}
-| oc -n ${NAMESPACE} create -f -
-```
-Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
-
-```yaml
-parameters:
-- name: TARGET_NAMESPACE
-  displayName: Openshift namespace for the custom query
-  description: Type the namespace where to limit the datasource
-  required: true
-- name: TOKEN_BEARER
-  displayName: Openshift Token Bearer
-  description: Type the Openshift Token
-  required: true
-  value:
-- name: THANOS_QUERIER_URL
-  displayName: Thanos Querier URL
-  description: Type the Thanos querier URL
-  required: true
-  value:
-```
-
----
-
-### Grafana Dashboard
-
-#### Prerequisites
-
-> NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
-
-```yaml
-  dashboardLabelSelector:
-    - matchExpressions:
-        - key: app
-          operator: In
-          values:
-            - grafana-dedalus
-```
-
-It follow the command check to run after you've replaced the "__@type_here_the_namespace@__" placeholder by the one where the Grafana Operator was installed:
-
-```bash
-  oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) \
-    --no-headers -n @type_here_the_namespace@ -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
-```
-
-afterward check that the output looks like as follow:
-
-    grafana-dedalus
-
-otherwise update the object by running the following command but only after you've replaced the  "__@type_here_the_namespace@__" placeholder by the one where the Grafana Operator was installed:
-
-```bash
-  oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) --type merge \
-   --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
-   -n @type_here_the_namespace@
-```
-
-**IMPORTANT**: Use the merge type when patching the CRD object.
-
-#### How to install
-
-Non ho avuto modo di lavorare molto sulle dashboard ma vi dico cosa ho usato per i test:
-
-il file ./deploy/dashboards/standalone/grafana.dashboard.jvm.selectable.yml è quella che ho usato per i test
-è basato sul file ./deploy/dashboards/grafana_dashboard_selectable.json che ho creato esportando la dashboard da grafana.
-
-Le prove le avevo fatte partendo dalla dashboard basic quindi bisogna fare delle modifiche a quella advanced
-quello che avevo fatto sulle dashboard da grafana è stato eliminare la definizione del Datasource e renderlo una variabile.
 
 ##########################################
 ##########################################
 ##########################################
 ##########################################
 ##########################################
-### Creating the Operator's objects
 
-> WARNING: a Cluster Role is required to proceed on this section.
-
-It follows the step by step commands to install the Grafana Operator as well:
-
-1. Process the template on fly by passing the parameters inline:
-
-```bash
-   oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
-     -p DASHBOARD_NAMESPACES_ALL=true \
-     -p NAMESPACE=@type_here_the_namespace@ \
-     -p STORAGECLASS=@type_here_the_custom_storageclass@ \
-     | oc -n @type_here_the_namespace@ create -f -
-```
-
-  where below is shown the command with the placeholder: '**@type_here_the_namespace@**' replaced by the value: 'dedalus-monitoring' and the others parameters have been omitted to load the default settings:
-
-```bash
-   oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/grafanaoperator.template.yml \
-     -p NAMESPACE=dedalus-monitoring \
-     | oc -n dedalus-monitoring create -f -
-```
-
-2. Approve the Operator's updates by patching the **InstallPlan** :
-
-```bash
-   oc patch InstallPlan/$(oc get --no-headers  InstallPlan|grep grafana-operator|cut -d' ' -f1) --type merge \
-    --patch='{"spec":{"approved":true}}' -n @type_here_the_namespace@
-```
-
-> Check Objects
+# To be reworked
+## Check Objects
 
 you can get a list of the created objects as follows:
 
@@ -762,7 +518,7 @@ and pay attention in case you wanted deleting any previously created objects at 
    oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
 ```
 
-#### Enabling the dashboards automatic discovery how to - OPTIONAL
+## Enabling the dashboards automatic discovery how to - OPTIONAL
 
 > Consider this section as an *OPTIONAL* task because this feature is enabled by default
 
@@ -785,72 +541,6 @@ By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below sn
         value: "true"
 ```
 
-## Grafana operator: Installing the predefined dashboards
-
-### Pre-Requisites
-
-> NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
-
-```yaml
-  dashboardLabelSelector:
-    - matchExpressions:
-        - key: app
-          operator: In
-          values:
-            - grafana-dedalus
-```
-
-It follow the command check to run after you've replaced the "**@type_here_the_namespace@**" placeholder by the one where the Grafana Operator was installed:
-
-```bash
-  oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) \
-    --no-headers -n @type_here_the_namespace@ -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
-```
-
-afterward check that the output looks like as follow:
-
-    grafana-dedalus
-
-otherwise update the object by running the following command but only after you've replaced the  "**@type_here_the_namespace@**" placeholder by the one where the Grafana Operator was installed:
-
-```bash
-  oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n @type_here_the_namespace@ |cut -d' ' -f1) --type merge \
-   --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/grafana/patch-grafana.json)" \
-   -n @type_here_the_namespace@
-```
-
-**IMPORTANT**: Use the merge type when patching the CRD object.
-
-### Dashboard objects and its dependencies creation using a template
-
-With the following commands you create the *dashboards presets* including its dependencies objects as well:
-
-* Passing the parameters inline:
-
-```bash
-  oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-    -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@)" \
-    -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-    | oc -n @type_here_the_namespace@ create -f -
-```
-
-  where below is shown the command with the placeholder: '**@type_here_the_namespace@**' replaced by the value: 'dedalus-monitoring':
-
-```bash
-  oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-    -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
-    -p THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host) \
-    | oc -n dedalus-monitoring create -f -
-```
-
-> it follows an alternative way to manage multiple parameters to pass in using an env file as input:
-
-```bash
-  oc process -f https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/templates/dashboard.template.yml \
-    --param-file=dashboard.template.env | oc create -n @type_here_the_namespace@ -f -
-```
-  
-  but don't forget to adjust the values within the file: **templates/dashboard.template.env** before proceed.
 
 ## Project's Contents
 
@@ -905,7 +595,7 @@ This folder includes the templates used for:
 
 ---
 
-### Useful commands
+## Useful commands
 
 * give the RBAC permission to the SA: *grafana-serviceaccount*
 
