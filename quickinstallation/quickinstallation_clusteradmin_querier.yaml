@@ -138,8 +138,6 @@ objects:
     kind: ClusterRole
     name: cluster-monitoring-view
     apiGroup: rbac.authorization.k8s.io
-
-
 parameters:
 - name: NAMESPACE
   displayName: Namespace where the grafana Operator will be installed in
