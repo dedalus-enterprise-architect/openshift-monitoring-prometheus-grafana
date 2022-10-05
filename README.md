@@ -33,14 +33,9 @@ References:
     - [Grafana Dashboard](#grafana-dashboard)
       - [Prerequisites](#prerequisites-1)
       - [How to install](#how-to-install)
-- [To be reworked](#to-be-reworked)
-  - [Check Objects](#check-objects)
-  - [Enabling the dashboards automatic discovery how to - OPTIONAL](#enabling-the-dashboards-automatic-discovery-how-to---optional)
-  - [Project's Contents](#projects-contents)
-    - [dashboards](#dashboards)
-    - [servicemonitor](#servicemonitor)
-    - [templates](#templates)
   - [Useful commands](#useful-commands)
+    - [Check Objects](#check-objects)
+    - [Enabling the dashboards automatic discovery how to - OPTIONAL](#enabling-the-dashboards-automatic-discovery-how-to---optional)
 
 ---
 ---
@@ -208,7 +203,7 @@ so before you can create the istance you need to issue the command:
 NAMESPACE=dedalus-monitoring
 
 oc project $NAMESPACE
-oc process -f rbac\grafanaoperator_oauth_rbac.template.yml \
+oc process -f rbac/grafanaoperator_oauth_rbac.template.yml \
 -p NAMESPACE=$NAMESPACE \
 | oc -n $NAMESPACE create -f -
 ```
@@ -216,7 +211,7 @@ oc process -f rbac\grafanaoperator_oauth_rbac.template.yml \
 > :warning: **You can complete this step with the following permissions:**  
 >  
 > * **Namespace Admin**
-Set the following variable and deploy the operator
+Set the following variable and deploy the instance
 
 ```bash
 NAMESPACE=dedalus-monitoring
@@ -399,14 +394,12 @@ NAMESPACE=dedalus-monitoring
 TARGET_NAMESPACE=@TARGET_NAMESPACE@
 
 
-oc process -f grafana_resources/deploy/datasource/datasource-thanos-querier_template.yml \
+oc process -f grafana_resources/deploy/datasource/datasource-thanos-tenancy_template.yml \
 -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
 -p THANOS_QUERIER_URL=@ask_to_the_cluster_admin@
 -p TARGET_NAMESPACE=${TARGET_NAMESPACE}
 | oc -n ${NAMESPACE} create -f -
 ```
-> :warning: **Permessi insufficienti per oc get route:**
-
 
 Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
 
@@ -493,108 +486,6 @@ NAMESPACE=dedalus-monitoring
 > :warning: **This template will download the dashboard from the this own repository**
 > **If you need a local installation you can use the file in grafana-resources/deploy/dashboards/standalone**
 
-
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-
-# To be reworked
-## Check Objects
-
-you can get a list of the created objects as follows:
-
-```bash
-   oc get all,ConfigMap,Secret,Grafana,OperatorGroup,Subscription,GrafanaDataSource,GrafanaDashboard,ClusterRole,ClusterRoleBinding \
-   -l app=grafana-dedalus --no-headers -n **@type_here_the_namespace@** |cut -d' ' -f1
-```
-
-and pay attention in case you wanted deleting any previously created objects at **cluster level**
-
-```bash
-   oc delete ClusterRole grafana-proxy-@type_here_the_namespace@
-   oc delete ClusterRoleBinding grafana-proxy-@type_here_the_namespace@
-   oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
-```
-
-## Enabling the dashboards automatic discovery how to - OPTIONAL
-
-> Consider this section as an *OPTIONAL* task because this feature is enabled by default
-
-The dashboards can be loaded in several ways as explained below:
-
-* within the same namespace where the operator is deployed in
-
-* any namespace when the *scan-all* feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/blob/master/documentation/multi_namespace_support.md))
-
-The operator can import dashboards from either one, some or all namespaces. By default, it will only look for dashboards in its own namespace.
-By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below snippet of code, the operator can watch for dashboards in other namespaces.
-
-```yaml
-  apiVersion: integreatly.org/v1alpha1
-  kind: Grafana
-  spec:
-    config:
-      env:
-      - name: DASHBOARD_NAMESPACES_ALL
-        value: "true"
-```
-
-
-## Project's Contents
-
-The directories tree:
-
-* deploy:
-  * dashboards:
-    * standalone:
-      * grafana.dashboard.jvm.advanced.yml
-      * grafana.dashboard.jvm.basic.yml
-    * grafana.dashboard.jvm.basic.json
-    * grafana.dashboard.jvm.basic.yml
-    * grafana.dashboard.jvm.json
-    * grafana.dashboard.jvm.yml
-  * grafana
-    * patch-grafana.json
-    * patch-grafana.yml
-  * servicemonitor
-    * dedalus.servicemonitor.yml
-  * templates
-    * dashboard.template.env
-    * dashboard.template.yml
-    * grafanaoperator.template.basic.yml
-    * grafanaoperator.template.yml
-
-### dashboards
-
-This folder includes the templates used for:
-
-* ```grafana.dashboard.jvm.basic.json```: the JSON dashboard template (not the micrometer version)
-* ```grafana.dashboard.jvm.basic.yml```: the *grafanadashboard* object definition (with link to a remote location)
-* ```grafana.dashboard.jvm.json```: the JSON dashboard template (micrometer version)
-* ```grafana.dashboard.jvm.yml```: the *grafanadashboard* object definition
-* ```standalone/grafana.dashboard.jvm.advanced.yml```: the *grafanadashboard* object definition with inline dashboard (micrometer version)
-* ```standalone/grafana.dashboard.jvm.basic.yml```: the *grafanadashboard* object definition with inline dashboard (not the micrometer version)
-
-### servicemonitor
-
-> ```deploy/servicemonitor/dedalus.servicemonitor.yml```
-
-For each POD which exposes the metrics has to be created a "ServiceMonitor" object.
-
-This object specify both the application (or POD name) and the coordinates of metrics where the prometheus service will scrape.
-
-### templates
-
-This folder includes the templates used for:
-
-* ```dashboard.template.yml```: setup the dashboards preset
-* ```grafanaoperator.template.basic.yml```: setup the operator with ephemeral storage
-* ```grafanaoperator.template.yml```: setup the operator with full feature
-
----
-
 ## Useful commands
 
 * give the RBAC permission to the SA: *grafana-serviceaccount*
@@ -616,3 +507,42 @@ This folder includes the templates used for:
   it follows an output example:
 
       https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+### Check Objects
+
+you can get a list of the created objects as follows:
+
+```bash
+   oc get all,ConfigMap,Secret,Grafana,OperatorGroup,Subscription,GrafanaDataSource,GrafanaDashboard,ClusterRole,ClusterRoleBinding \
+   -l app=grafana-dedalus --no-headers -n **@type_here_the_namespace@** |cut -d' ' -f1
+```
+
+and pay attention in case you wanted deleting any previously created objects at **cluster level**
+
+```bash
+   oc delete ClusterRole grafana-proxy-@type_here_the_namespace@
+   oc delete ClusterRoleBinding grafana-proxy-@type_here_the_namespace@
+   oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
+```
+
+### Enabling the dashboards automatic discovery how to - OPTIONAL
+
+> Consider this section as an *OPTIONAL* task because this feature is enabled by default
+
+The dashboards can be loaded in several ways as explained below:
+
+* within the same namespace where the operator is deployed in
+
+* any namespace when the *scan-all* feature is enabled (read the guide on [link](https://github.com/grafana-operator/grafana-operator/blob/master/documentation/multi_namespace_support.md))
+
+The operator can import dashboards from either one, some or all namespaces. By default, it will only look for dashboards in its own namespace.
+By setting the  ```DASHBOARD_NAMESPACES_ALL="true"``` env var as in the below snippet of code, the operator can watch for dashboards in other namespaces.
+
+```yaml
+  apiVersion: integreatly.org/v1alpha1
+  kind: Grafana
+  spec:
+    config:
+      env:
+      - name: DASHBOARD_NAMESPACES_ALL
+        value: "true"
+```
