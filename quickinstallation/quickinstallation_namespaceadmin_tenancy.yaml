@@ -241,9 +241,9 @@ parameters:
   description: Type the Openshift Token
   required: true
   value:
-- name: THANOS_QUERIER_URL
+- name: THANOS_TENANCY_URL
   displayName: Thanos Querier URL
-  description: Type the Thanos querier URL (https://thanos-querier.namespace.svc.cluster.local:9091)
+  description: Type the Thanos Tenancy URL (exposed on port 9092)
   required: true
   value:
 - name: TARGET_NAMESPACE

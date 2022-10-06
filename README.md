@@ -382,9 +382,11 @@ here a way to collect the info, you can use any command you like:
 ```bash
 oc get route thanos-tenancy -n openshift-monitoring
 ```
+
 or
+
 ```bash
-THANOS_QUERIER_URL=$(oc get route thanos-tenancy -n openshift-monitoring -o json | jq -r .spec.host)
+THANOS_TENANCY_URL=$(oc get route thanos-tenancy -n openshift-monitoring -o json | jq -r .spec.host)
 ```
 
 ##### How to install DataSource to Thanos-Tenancy
@@ -400,7 +402,7 @@ TARGET_NAMESPACE=@TARGET_NAMESPACE@
 
 oc process -f grafana_resources/deploy/datasource/datasource-thanos-tenancy_template.yml \
 -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
--p THANOS_QUERIER_URL=@ask_to_the_cluster_admin@
+-p THANOS_TENANCY_URL=@ask_to_the_cluster_admin@
 -p TARGET_NAMESPACE=${TARGET_NAMESPACE}
 | oc -n ${NAMESPACE} create -f -
 ```
