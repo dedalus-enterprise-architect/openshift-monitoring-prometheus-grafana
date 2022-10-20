@@ -10,8 +10,6 @@ References:
 * <https://github.com/grafana-operator/grafana-operator>
 
 ---
----
----
 ## Index
 
 - [Grafana Operator Resources](#grafana-operator-resources)
