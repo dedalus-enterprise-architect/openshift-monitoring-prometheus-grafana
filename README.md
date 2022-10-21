@@ -185,7 +185,6 @@ Set the following variable and deploy the operator
 ```bash
 NAMESPACE=dedalus-monitoring
 
-oc project $NAMESPACE
 oc process -f grafana-resources/deploy/grafana/instance_basic.template.yml \
 -p NAMESPACE=$NAMESPACE \
 | oc -n $NAMESPACE create -f -
@@ -204,7 +203,6 @@ so before yum must provision the following RBAC:
 ```bash
 NAMESPACE=dedalus-monitoring
 
-oc project $NAMESPACE
 oc process -f grafana-resources/rbac/grafanaoperator_oauth_rbac.template.yml \
 -p NAMESPACE=$NAMESPACE \
 | oc -n $NAMESPACE create -f -
@@ -218,7 +216,6 @@ Set the following variable and deploy the instance
 ```bash
 NAMESPACE=dedalus-monitoring
 
-oc project $NAMESPACE
 oc process -f grafana-resources/deploy/grafana/instance_oauth.template.yml \
 -p NAMESPACE=$NAMESPACE \
 | oc -n $NAMESPACE create -f -
