@@ -135,7 +135,6 @@ installplan.operators.coreos.com/install-xxxxx patched
 
 The InstallPlan is set to Manual to avoid automatic update on versions that are not tested, please remember that new versions could NOT work as expected.
 
-
 > :warning: **If you want to install all the resources quickly you can read grafana-resources/quickinstallation/QuickInstallation.md**
 > **It will skip the description of all steps and will short the number of choices that you have to make to complete the installation**
 
@@ -314,7 +313,9 @@ As Cluster Admin you will need to share to the MONITORING_NAMESPACE Admin the ro
 ```bash
 oc get route thanos-querier -n openshift-monitoring
 ```
+
 or
+
 ```bash
 THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host)
 ```
@@ -376,8 +377,8 @@ MONITORING_NAMESPACE=dedalus-monitoring
 oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:grafana-serviceaccount -n ${APPLICATION_NAMESPACE}
 ```
 
-As Cluster Admin you will need to share to the Namespace Admin the route to the Thanos-Tenancy service 
-here a way to collect the info, you can use any command you like:
+As Cluster Admin you will need to share to the MONITORING_NAMESPACE Admin the route to the Thanos-Tenancy service.
+Here's a way to collect the info, you can use any command you like:
 
 ```bash
 oc get route thanos-tenancy -n openshift-monitoring
@@ -400,10 +401,10 @@ APPLICATION_NAMESPACE=dedalus-app
 MONITORING_NAMESPACE=dedalus-monitoring
 
 
-oc process -f grafana_resources/deploy/datasource/datasource-thanos-tenancy_template.yml \
+oc process -f grafana-resources/deploy/datasource/datasource-thanos-tenancy_template.yml \
 -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)" \
--p THANOS_TENANCY_URL=@ask_to_the_cluster_admin@
--p APPLICATION_NAMESPACE=$APPLICATION_NAMESPACE
+-p THANOS_TENANCY_URL=@ask_to_the_cluster_admin@ \
+-p NAMESPACE=$APPLICATION_NAMESPACE \
 | oc -n $MONITORING_NAMESPACE create -f -
 ```
 
@@ -434,6 +435,7 @@ parameters:
 
 Dashboards are resources used by the Grafana instance itself, you can create them on Openshift to automatically upload them into Grafana.
 This procedure will add 2 preconfigured dashboards to Grafana about Java Metrics.
+
 #### Prerequisites
 
 The Dashboard are imported following a matchExpression defined into the Grafana Instance resource that you have created previously.
@@ -474,7 +476,6 @@ NAMESPACE=dedalus-monitoring
 
 #### How to install
 
-
 > :warning: **You can complete this step with the following permissions:**  
 >
 > * **Namespace Admin**
@@ -513,6 +514,7 @@ NAMESPACE=dedalus-monitoring
   it follows an output example:
 
       https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+
 ### Check Objects
 
 you can get a list of the created objects as follows:
