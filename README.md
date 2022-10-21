@@ -57,7 +57,8 @@ On OpenShift
 
 ## Installation
 
-This is the procedure to install the Grafana Operator, to instantiate a working grafana instance and to configure a grafana datasource and bashboard, the following components will be installed and configured:
+This is the procedure to install the Grafana Operator, to instantiate a working grafana instance and to configure a grafana datasource and dashboard.
+The following components will be installed and configured:
 
 1. Grafana Operator
 2. Grafana Operator RBAC
