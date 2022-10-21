@@ -191,7 +191,7 @@ oc process -f grafana-resources/deploy/grafana/instance_basic.template.yml \
 ```
 
 ---
-#### Istance Oauth
+#### Instance oAuth
 
 > :warning: **You can complete this step with the following permissions:**  
 >  
@@ -304,8 +304,7 @@ parameters:
   value: dedalus-monitoring
 ```
 
-As Cluster Admin you will need to share to the Namespace Admin the route to the Thanos-Querier service 
-here a way to collect the info, you can use any command you like:
+As Cluster Admin you will need to share to the Namespace Admin the route to the Thanos-Querier service; here's a way to collect the info, you can use any command you like:
 
 ```bash
 oc get route thanos-querier -n openshift-monitoring
