@@ -404,7 +404,7 @@ MONITORING_NAMESPACE=dedalus-monitoring
 oc process -f grafana-resources/deploy/datasource/datasource-thanos-tenancy_template.yml \
 -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)" \
 -p THANOS_TENANCY_URL=@ask_to_the_cluster_admin@ \
--p NAMESPACE=$APPLICATION_NAMESPACE \
+-p TARGET_NAMESPACE=$APPLICATION_NAMESPACE \
 | oc -n $MONITORING_NAMESPACE create -f -
 ```
 
@@ -421,9 +421,9 @@ parameters:
   description: Type the Openshift Token
   required: true
   value:
-- name: THANOS_QUERIER_URL
-  displayName: Thanos Querier URL
-  description: Type the Thanos querier URL
+- name: THANOS_TENANCY_URL
+  displayName: Thanos Tenancy URL
+  description: Type the Thanos Tenancy URL (exposed on port 9092)
   required: true
   value:
 ```
@@ -433,14 +433,14 @@ parameters:
 
 ### Grafana Dashboard
 
-Dashboards are resources used by the Grafana instance itself, you can create them on Openshift to automatically upload them into Grafana.
+Dashboards are resources used by the Grafana instance itself, you can create them on OpenShift to automatically upload them into Grafana.
 This procedure will add 2 preconfigured dashboards to Grafana about Java Metrics.
 
 #### Prerequisites
 
-The Dashboard are imported following a matchExpression defined into the Grafana Instance resource that you have created previously.
+Dashboards are imported following a *matchExpression* defined into the Grafana instance resource that you have created previously.
 
-> NOTES: before proceed is important make sure the following dashboard selector snippet is already configured within the Grafana instance object:
+> NOTES: before proceeding make sure that the following dashboard selector snippet is already configured within the Grafana instance object:
 
 ```yaml
   dashboardLabelSelector:
@@ -451,25 +451,27 @@ The Dashboard are imported following a matchExpression defined into the Grafana 
             - grafana-dedalus
 ```
 
-It follow the command to check the configuration be aware you have to choose the **NAMESPACE** where you installed grafana
+Run the following command to check the configuration; be aware to choose the MONITORING_NAMESPACE:
 
 ```bash
-NAMESPACE=dedalus-monitoring
-  oc get grafana $(oc get Grafana -l app=grafana-dedalus --no-headers -n ${NAMESPACE} |cut -d' ' -f1) \
-    --no-headers -n${NAMESPACE} -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
+MONITORING_NAMESPACE=dedalus-monitoring
+oc get grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n $MONITORING_NAMESPACE |cut -d' ' -f1) \
+    --no-headers -n $MONITORING_NAMESPACE -o=jsonpath='{.spec.dashboardLabelSelector[0].matchExpressions[?(@.key=="app")].values[]}'
 ```
 
-afterward check that the output looks like as follow:
-
-    grafana-dedalus
-
-otherwise update the object by running the following command
+where the expected output is:
 
 ```bash
-NAMESPACE=dedalus-monitoring
-  oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n ${NAMESPACE} |cut -d' ' -f1) --type merge \
-   --patch="$(curl -s https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/operator/patch-grafana.json)" \
-   -n ${NAMESPACE}
+grafana-dedalus
+```
+
+Otherwise update the object by running the following command:
+
+```bash
+MONITORING_NAMESPACE=dedalus-monitoring
+  oc patch grafana/$(oc get Grafana -l app=grafana-dedalus --no-headers -n $MONITORING_NAMESPACE |cut -d' ' -f1) --type merge \
+   --patch-file=grafana-resources/deploy/operator/patch-grafana.json \
+   -n $MONITORING_NAMESPACE
 ```
 
 **IMPORTANT**: Use the merge type when patching the CRD object.
@@ -478,16 +480,16 @@ NAMESPACE=dedalus-monitoring
 
 > :warning: **You can complete this step with the following permissions:**  
 >
-> * **Namespace Admin**
+> * **MONITORING_NAMESPACE Admin**
 
-With the following commands you create the *dashboards presets* including its dependencies objects as well
+Create the *dashboards presets* including dependencies:
 
 ```bash
-NAMESPACE=dedalus-monitoring
-  oc process -f grafana-resources/deploy/dashboards/dashboard.template.yml \
-    -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
-    -p THANOS_QUERIER_URL=@ask_to_the_cluster_admin@ \
-    | oc -n ${NAMESPACE} -f -
+MONITORING_NAMESPACE=dedalus-monitoring
+oc process -f grafana-resources/deploy/dashboards/dashboard.template.yml \
+  -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)" \
+  -p THANOS_QUERIER_URL=@ask_to_the_cluster_admin@ \
+  | oc -n $MONITORING_NAMESPACE create -f -
 ```
 
 > :warning: **This template will download the dashboard from the this own repository**
