@@ -283,7 +283,8 @@ To be able to connect to Thanos-Querier, the service account **grafana-serviceac
 
 ```bash
 oc process -f grafana-resources/rbac/grafana-cluster-monitoring-view-binding_template.yml | \
-oc create -f -
+-p NAMESPACE=$NAMESPACE \
+| oc create -n $NAMESPACE -f -
 ```
 
 Expected output
