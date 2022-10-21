@@ -492,30 +492,40 @@ oc process -f grafana-resources/deploy/dashboards/dashboard.template.yml \
   | oc -n $MONITORING_NAMESPACE create -f -
 ```
 
-> :warning: **This template will download the dashboard from the this own repository**
+> :warning: **This template will download the dashboard from this repository**
 > **If you need a local installation you can use the file in grafana-resources/deploy/dashboards/standalone**
 
 ## Useful commands
 
 * give the RBAC permission to the SA: *grafana-serviceaccount*
 
-    ```oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@```
+```bash
+oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@
+```
 
-    or remove if it needs to restore settings:
+or remove if it needs to restore settings:
 
-    ```oc adm policy remove-cluster-role-from-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@```
+```bash
+oc adm policy remove-cluster-role-from-user cluster-monitoring-view -z grafana-serviceaccount -n @type_here_the_namespace@
+```
 
 * fill the variable: **TOKEN_BEARER** getting the token bearer as follow:
 
-    ```oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@```
+```bash
+oc serviceaccounts get-token grafana-serviceaccount -n @type_here_the_namespace@
+```
 
 * fill the variable: **THANOS_QUERIER_URL** getting the Thanos route as follow:
 
-    ```oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host```
+```bash
+oc get route thanos-querier -n openshift-monitoring -o json | jq -r .spec.host
+```
 
-  it follows an output example:
+Here is an output example:
 
-      https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+```bash
+https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+```
 
 ### Check Objects
 
@@ -526,7 +536,7 @@ you can get a list of the created objects as follows:
    -l app=grafana-dedalus --no-headers -n **@type_here_the_namespace@** |cut -d' ' -f1
 ```
 
-and pay attention in case you wanted deleting any previously created objects at **cluster level**
+and pay attention in case you wanted to delete any previously created objects at **cluster level**
 
 ```bash
    oc delete ClusterRole grafana-proxy-@type_here_the_namespace@
