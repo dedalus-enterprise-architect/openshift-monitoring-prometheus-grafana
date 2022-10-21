@@ -282,7 +282,7 @@ Thanos instance on port
 To be able to connect to Thanos-Querier, the service account **grafana-serviceaccount** needs to be able to perform a **get** to all **namespaces**. To achieve this you can assign the ClusterRole **cluster-monitoring-view** permission to the service account.
 
 ```bash
-oc process -f grafana-resources/rbac/grafana-cluster-monitoring-view-binding_template.yml | \
+oc process -f grafana-resources/rbac/grafana-cluster-monitoring-view-binding_template.yml \
 -p NAMESPACE=$NAMESPACE \
 | oc create -n $NAMESPACE -f -
 ```
