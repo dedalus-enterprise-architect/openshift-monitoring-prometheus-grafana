@@ -10,33 +10,35 @@ References:
 * <https://github.com/grafana-operator/grafana-operator>
 
 ---
+
 ## Index
 
-- [Grafana Operator Resources](#grafana-operator-resources)
-  - [Index](#index)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-    - [Grafana Operator](#grafana-operator)
-    - [Grafana Operator RBAC](#grafana-operator-rbac)
-    - [Grafana Instance](#grafana-instance)
-      - [Istance Basic](#istance-basic)
-      - [Istance Oauth](#istance-oauth)
-    - [Grafana Datasource](#grafana-datasource)
-      - [Thanos-Querier](#thanos-querier)
-        - [RBAC for Thanos-Querier](#rbac-for-thanos-querier)
-        - [How to install DataSource to Thanos-Querier](#how-to-install-datasource-to-thanos-querier)
-      - [Thanos-Tenancy](#thanos-tenancy)
-        - [Prerequisites for Thanos-Tenancy](#prerequisites-for-thanos-tenancy)
-        - [How to install DataSource to Thanos-Tenancy](#how-to-install-datasource-to-thanos-tenancy)
-    - [Grafana Dashboard](#grafana-dashboard)
-      - [Prerequisites](#prerequisites-1)
-      - [How to install](#how-to-install)
-  - [Useful commands](#useful-commands)
-    - [Check Objects](#check-objects)
-    - [Enabling the dashboards automatic discovery how to - OPTIONAL](#enabling-the-dashboards-automatic-discovery-how-to---optional)
+* [Grafana Operator Resources](#grafana-operator-resources)
+  * [Index](#index)
+  * [Prerequisites](#prerequisites)
+  * [Installation](#installation)
+    * [Grafana Operator](#grafana-operator)
+    * [Grafana Operator RBAC](#grafana-operator-rbac)
+    * [Grafana Instance](#grafana-instance)
+      * [Instance Basic](#instance-basic)
+      * [Instance oAuth](#instance-oauth)
+    * [Grafana Datasource](#grafana-datasource)
+      * [Thanos-Querier](#thanos-querier)
+        * [RBAC for Thanos-Querier](#rbac-for-thanos-querier)
+        * [How to install DataSource to Thanos-Querier](#how-to-install-datasource-to-thanos-querier)
+      * [Thanos-Tenancy](#thanos-tenancy)
+        * [Prerequisites for Thanos-Tenancy](#prerequisites-for-thanos-tenancy)
+        * [How to install DataSource to Thanos-Tenancy](#how-to-install-datasource-to-thanos-tenancy)
+    * [Grafana Dashboard](#grafana-dashboard)
+      * [Prerequisites](#prerequisites-1)
+      * [How to install](#how-to-install)
+  * [Useful commands](#useful-commands)
+    * [Check Objects](#check-objects)
+    * [Enabling the dashboards automatic discovery how to - OPTIONAL](#enabling-the-dashboards-automatic-discovery-how-to---optional)
 
 ---
 ---
+
 ## Prerequisites
 
 On your client
@@ -46,12 +48,15 @@ On your client
 
 On OpenShift
 
-1. create a dedicated namespace (ex. *dedalus-monitoring*)
-2. create a dedicated user (ex. *monitoring-user*)
+1. at least one namespace (ex. dedalus-app) with a running application exposing metrics already exists
+2. create a dedicated monitoring namespace (ex. *dedalus-monitoring*)
+3. create a dedicated user (ex. *monitoring-user*)
 
 ---
 ---
+
 ## Installation
+
 This is the procedure to install the Grafana Operator, to instantiate a working grafana instance and to configure a grafana datasource and bashboard, the following components will be installed and configured:
 
 1. Grafana Operator
@@ -72,7 +77,7 @@ This is the procedure to install the Grafana Operator, to instantiate a working 
 
 > :warning: **You need Cluster Admin role for this section**
 
-In this section we are going to install the Grafana Operator itself, the following objects will be created:
+In this section we are going to install the Grafana Operator itself in the monitoring namespace (from now on MONITORING_NAMESPACE), the following objects will be created:
 
 * OperatorGroup
 * Subscription
@@ -83,13 +88,13 @@ In this section we are going to install the Grafana Operator itself, the followi
 Set the following variables and deploy the operator
 
 ```bash
-NAMESPACE=dedalus-monitoring
+MONITORING_NAMESPACE=dedalus-monitoring
 DASHBOARD_NAMESPACES_ALL=true
 
 oc process -f grafana-resources/deploy/operator/grafanaoperator.template.yml \
 -p DASHBOARD_NAMESPACES_ALL=$DASHBOARD_NAMESPACES_ALL \
--p NAMESPACE=$NAMESPACE \
-| oc -n $NAMESPACE create -f -
+-p NAMESPACE=$MONITORING_NAMESPACE \
+| oc -n $MONITORING_NAMESPACE create -f -
 ```
 
 The output should be
@@ -119,7 +124,7 @@ parameters:
 Now you have installed all the objects needed by the operator but you need to approve "installPlanApproval", so run:
 
 ```bash
-oc patch installplan $(oc get ip -n $NAMESPACE -o=jsonpath='{.items[?(@.spec.approved==false)].metadata.name}') -n $NAMESPACE --type merge --patch '{"spec":{"approved":true}}'
+oc patch installplan $(oc get ip -n $MONITORING_NAMESPACE -o=jsonpath='{.items[?(@.spec.approved==false)].metadata.name}') -n $MONITORING_NAMESPACE --type merge --patch '{"spec":{"approved":true}}'
 ```
 
 Expected output
@@ -178,19 +183,20 @@ Before starting you must choose the preferred template:
 
 > :warning: **You can complete this step with the following permissions:**  
 >  
-> * **Namespace Admin if the aggregate RBAC had been created**
+> * **MONITORING_NAMESPACE Admin if the aggregate RBAC had been created**
 
 Set the following variable and deploy the operator
 
 ```bash
-NAMESPACE=dedalus-monitoring
+MONITORING_NAMESPACE=dedalus-monitoring
 
 oc process -f grafana-resources/deploy/grafana/instance_basic.template.yml \
--p NAMESPACE=$NAMESPACE \
-| oc -n $NAMESPACE create -f -
+-p NAMESPACE=$MONITORING_NAMESPACE \
+| oc -n $MONITORING_NAMESPACE create -f -
 ```
 
 ---
+
 #### Instance oAuth
 
 > :warning: **You can complete this step with the following permissions:**  
@@ -201,24 +207,24 @@ The oAuth instance needs ClusterAdmin privileges to create several objects,
 so before yum must provision the following RBAC:
 
 ```bash
-NAMESPACE=dedalus-monitoring
+MONITORING_NAMESPACE=dedalus-monitoring
 
 oc process -f grafana-resources/rbac/grafanaoperator_oauth_rbac.template.yml \
--p NAMESPACE=$NAMESPACE \
-| oc -n $NAMESPACE create -f -
+-p NAMESPACE=$MONITORING_NAMESPACE \
+| oc -n $MONITORING_NAMESPACE create -f -
 ```
 
 > :warning: **You can complete this step with the following permissions:**  
 >  
-> * **Namespace Admin**
+> * **MONITORING_NAMESPACE Admin**
 Set the following variable and deploy the instance
 
 ```bash
-NAMESPACE=dedalus-monitoring
+MONITORING_NAMESPACE=dedalus-monitoring
 
 oc process -f grafana-resources/deploy/grafana/instance_oauth.template.yml \
--p NAMESPACE=$NAMESPACE \
-| oc -n $NAMESPACE create -f -
+-p NAMESPACE=$MONITORING_NAMESPACE \
+| oc -n $MONITORING_NAMESPACE create -f -
 ```
 
 Expected output
@@ -251,7 +257,7 @@ parameters:
 ### Grafana Datasource
 
 Accessing the custom metrics collected by Prometheus is possible accessing the Thanos services.
-Thanos has services exposed on different ports, you are going to use one port over another based on the kind of RBAC that you can assign to
+Thanos has services published on different ports, which one you will use depends on the kind of RBAC that you can assign to
 the grafana service account.
 
 Here an extensive documentation on what are the differences between the different services:
@@ -265,9 +271,8 @@ Thanos instance on port
 * 9091 named Thanos-Querier:
   * To access this service you will need to have visibility of all namespaces into the cluster
 * 9092 named Thanos-Tenancy
-  * Using this will give you access to one namespace at the time (referred as TARGET_NAMESPACE in the future) so you will need 
-  to create one datasource for each namespace
-  * You are going to need view permission on the TARGET_NAMESPACE
+  * This allows to give access to a specific application namespace metrics (from now on APPLICATION_NAMESPACE), so you will need to create one datasource for each APPLICATION_NAMESPACE
+  * You are going to need view permission on the APPLICATION_NAMESPACE
 
 ---
 
@@ -283,8 +288,8 @@ To be able to connect to Thanos-Querier, the service account **grafana-serviceac
 
 ```bash
 oc process -f grafana-resources/rbac/grafana-cluster-monitoring-view-binding_template.yml \
--p NAMESPACE=$NAMESPACE \
-| oc create -n $NAMESPACE -f -
+-p NAMESPACE=$MONITORING_NAMESPACE \
+| oc create -n $MONITORING_NAMESPACE -f -
 ```
 
 Expected output
@@ -304,7 +309,7 @@ parameters:
   value: dedalus-monitoring
 ```
 
-As Cluster Admin you will need to share to the Namespace Admin the route to the Thanos-Querier service; here's a way to collect the info, you can use any command you like:
+As Cluster Admin you will need to share to the MONITORING_NAMESPACE Admin the route to the Thanos-Querier service; here's a way to collect the info, you can use any command you like:
 
 ```bash
 oc get route thanos-querier -n openshift-monitoring
@@ -318,18 +323,18 @@ THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json
 
 > :warning: **You can complete this step with the following permissions:**  
 >
-> * **Namespace Admin**
+> * **MONITORING_NAMESPACE Admin**
 
 ```bash
-NAMESPACE=dedalus-monitoring
+MONITORING_NAMESPACE=dedalus-monitoring
 
 oc process -f grafana-resources/deploy/datasource/datasource-thanos-querier_template.yml \
--p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $NAMESPACE)" \
+-p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)" \
 -p THANOS_QUERIER_URL=@ask_to_the_cluster_admin@ \
-| oc -n $NAMESPACE create -f -
+| oc -n $MONITORING_NAMESPACE create -f -
 ```
 
-Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
+*datasource-thanos-querier_template.yml* contains the following parameters:
 
 ```yaml
 parameters:
@@ -355,7 +360,7 @@ parameters:
 >  
 > * **Cluster Admin**
 
-The port 9092 is not exposed by default from openshift so the first step is to be sure to have a route to it,
+The port 9092 is not exposed by default from OpenShift, so the first step is to be sure to create a route for it.
 One way to do it is the following:
 
 ```bash
@@ -365,10 +370,10 @@ oc create -f grafana-resources/deploy/datasource/route-thanos-tenancy.yml
 The second step is to give the right rbac to the service account **grafana-serviceaccount**, in this case it will need permission as viewer on the target namespace:
 
 ```bash
-TARGET_NAMESPACE=@TARGET_NAMESPACE@
-NAMESPACE=dedalus-monitoring
+APPLICATION_NAMESPACE=dedalus-app
+MONITORING_NAMESPACE=dedalus-monitoring
 
-oc adm policy add-role-to-user view system:serviceaccount:${NAMESPACE}:grafana-serviceaccount -n ${TARGET_NAMESPACE}
+oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:grafana-serviceaccount -n ${APPLICATION_NAMESPACE}
 ```
 
 As Cluster Admin you will need to share to the Namespace Admin the route to the Thanos-Tenancy service 
@@ -388,18 +393,18 @@ THANOS_TENANCY_URL=$(oc get route thanos-tenancy -n openshift-monitoring -o json
 
 > :warning: **You can complete this step with the following permissions:**  
 >
-> * **Namespace Admin**
+> * **MONITORING_NAMESPACE Admin**
 >
 ```bash
-NAMESPACE=dedalus-monitoring
-TARGET_NAMESPACE=@TARGET_NAMESPACE@
+APPLICATION_NAMESPACE=dedalus-app
+MONITORING_NAMESPACE=dedalus-monitoring
 
 
 oc process -f grafana_resources/deploy/datasource/datasource-thanos-tenancy_template.yml \
--p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n dedalus-monitoring)" \
+-p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)" \
 -p THANOS_TENANCY_URL=@ask_to_the_cluster_admin@
--p TARGET_NAMESPACE=${TARGET_NAMESPACE}
-| oc -n ${NAMESPACE} create -f -
+-p APPLICATION_NAMESPACE=$APPLICATION_NAMESPACE
+| oc -n $MONITORING_NAMESPACE create -f -
 ```
 
 Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
