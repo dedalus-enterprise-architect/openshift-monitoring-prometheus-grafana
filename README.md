@@ -198,14 +198,14 @@ oc process -f grafana-resources/deploy/grafana/instance_basic.template.yml \
 >  
 > * **Cluster Admin**
 
-The Oauth instance will need several obiect that needs the ClusterAdmin right to be created,
-so before you can create the istance you need to issue the command:
+The oAuth instance needs ClusterAdmin privileges to create several objects,
+so before yum must provision the following RBAC:
 
 ```bash
 NAMESPACE=dedalus-monitoring
 
 oc project $NAMESPACE
-oc process -f rbac/grafanaoperator_oauth_rbac.template.yml \
+oc process -f grafana-resources/rbac/grafanaoperator_oauth_rbac.template.yml \
 -p NAMESPACE=$NAMESPACE \
 | oc -n $NAMESPACE create -f -
 ```
