@@ -162,19 +162,19 @@ clusterrole.rbac.authorization.k8s.io/aggregate-grafana-view created
 
 ### Grafana Instance
 
-Before start you must choose the rights template:
+Before starting you must choose the preferred template:
 
-* **deploy/grafana/instance_basic.template.yml** : this template aims is installing the Grafana Operator without the following features:
+* **deploy/grafana/instance_basic.template.yml** : deploy of the Grafana Operator instance with the following features:
   * ephemeral storage
   * basic login
 
-* **deploy/grafana/instance_oauth.template.yml** : this template aims is installing the Grafana Operator with the following features:
+* **deploy/grafana/instance_oauth.template.yml** : deploy of the Grafana Operator instance with the following features:
   * persistent storage
   * oAuth Login (it allows the login by the same Openshift user data)
 
 ---
 
-#### Istance Basic
+#### Instance Basic
 
 > :warning: **You can complete this step with the following permissions:**  
 >  
