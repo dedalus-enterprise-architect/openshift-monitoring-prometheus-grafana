@@ -326,7 +326,7 @@ NAMESPACE=dedalus-monitoring
 oc process -f grafana-resources/deploy/datasource/datasource-thanos-querier_template.yml \
 -p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $NAMESPACE)" \
 -p THANOS_QUERIER_URL=@ask_to_the_cluster_admin@ \
-| oc -n ${NAMESPACE} create -f -
+| oc -n $NAMESPACE create -f -
 ```
 
 Here a list of all the parameters accepted by this yml and theirs defaults (this information are inside the yaml):
