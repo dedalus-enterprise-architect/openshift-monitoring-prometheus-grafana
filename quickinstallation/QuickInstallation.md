@@ -10,7 +10,7 @@ For any details about the commands here please refer to the main README.md file
   - [Cluster-Admin](#cluster-admin)
     - [Thanos-Querier](#thanos-querier)
     - [Thanos-Tenancy](#thanos-tenancy)
-  - [Namespace-Admin](#namespace-admin)
+  - [MONITORING_NAMESPACE-Admin](#monitoringnamespace-admin)
     - [Thanos-Querier](#thanos-querier-1)
     - [Thanos-Tenancy](#thanos-tenancy-1)
 
@@ -82,7 +82,7 @@ MONITORING_NAMESPACE=dedalus-monitoring
 oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:grafana-serviceaccount -n ${APPLICATION_NAMESPACE}
 ```
 
-## MONITORING_NAMESPACE Admin
+## MONITORING_NAMESPACE-Admin
 
 you still need to ask to the Cluster Admin the value for THANOS_QUERIER_URL or THANOS_TENANCY_URL
 
