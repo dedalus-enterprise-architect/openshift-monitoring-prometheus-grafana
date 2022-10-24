@@ -82,7 +82,7 @@ MONITORING_NAMESPACE=dedalus-monitoring
 oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:grafana-serviceaccount -n ${APPLICATION_NAMESPACE}
 ```
 
-## Namespace-Admin
+## MONITORING_NAMESPACE Admin
 
 you still need to ask to the Cluster Admin the value for THANOS_QUERIER_URL or THANOS_TENANCY_URL
 
