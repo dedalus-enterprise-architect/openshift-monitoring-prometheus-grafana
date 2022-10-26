@@ -139,8 +139,7 @@ installplan.operators.coreos.com/install-xxxxx patched
 
 The InstallPlan is set to Manual to avoid automatic update on versions that are not tested, please remember that new versions could NOT work as expected.
 
-> :warning: **If you want to install all the resources quickly you can read grafana-resources/quickinstallation/QuickInstallation.md**
-> **It will skip the description of all steps and will short the number of choices that you have to make to complete the installation**
+> :warning: **If you want to skip the description of all steps and avoid deploy choices you can read grafana-resources/quickinstallation/QuickInstallation.md**
 
 ---
 ---
