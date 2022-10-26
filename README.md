@@ -184,9 +184,7 @@ Before starting you must choose the preferred template:
 
 #### Instance Basic
 
-> :warning: **You can complete this step with the following permissions:**  
->  
-> * **MONITORING_NAMESPACE Admin if the aggregate RBAC had been created**
+> :warning: **You need MONITORING_NAMESPACE Admin role for this section if the aggregate RBAC had been created**
 
 Set the following variable and deploy the operator
 
@@ -202,9 +200,7 @@ oc process -f grafana-resources/deploy/grafana/instance_basic.template.yml \
 
 #### Instance oAuth
 
-> :warning: **You can complete this step with the following permissions:**  
->  
-> * **Cluster Admin**
+> :warning: **You need Cluster Admin role for this section**
 
 The oAuth instance needs ClusterAdmin privileges to create several objects,
 so before yum must provision the following RBAC:
@@ -217,9 +213,8 @@ oc process -f grafana-resources/rbac/grafanaoperator_oauth_rbac.template.yml \
 | oc -n $MONITORING_NAMESPACE create -f -
 ```
 
-> :warning: **You can complete this step with the following permissions:**  
->  
-> * **MONITORING_NAMESPACE Admin**
+> :warning: **You need MONITORING_NAMESPACE Admin role for this section**
+
 Set the following variable and deploy the instance
 
 ```bash
@@ -287,9 +282,7 @@ Thanos instance on port
 
 ##### RBAC for Thanos-Querier
 
-> :warning: **You can complete this step with the following permissions:**  
->  
-> * **Cluster Admin**  
+> :warning: **You need Cluster Admin role for this section**
 
 To be able to connect to Thanos-Querier, the service account **grafana-serviceaccount** needs to be able to perform a **get** to all **namespaces**. To achieve this you can assign the ClusterRole **cluster-monitoring-view** permission to the service account.
 
@@ -330,9 +323,7 @@ THANOS_QUERIER_URL=$(oc get route thanos-querier -n openshift-monitoring -o json
 
 ##### How to install DataSource to Thanos-Querier
 
-> :warning: **You can complete this step with the following permissions:**  
->
-> * **MONITORING_NAMESPACE Admin**
+> :warning: **You need MONITORING_NAMESPACE Admin role for this section**
 
 ```bash
 MONITORING_NAMESPACE=dedalus-monitoring
@@ -365,9 +356,7 @@ parameters:
 
 ##### Prerequisites for Thanos-Tenancy
 
-> :warning: **You can complete this step with the following permissions:**  
->  
-> * **Cluster Admin**
+> :warning: **You need Cluster Admin role for this section**
 
 The port 9092 is not exposed by default from OpenShift, so the first step is to be sure to create a route for it.
 One way to do it is the following:
@@ -400,10 +389,8 @@ THANOS_TENANCY_URL=$(oc get route thanos-tenancy -n openshift-monitoring -o json
 
 ##### How to install DataSource to Thanos-Tenancy
 
-> :warning: **You can complete this step with the following permissions:**  
->
-> * **MONITORING_NAMESPACE Admin**
->
+> :warning: **You need MONITORING_NAMESPACE Admin role for this section**
+
 ```bash
 APPLICATION_NAMESPACE=dedalus-app
 MONITORING_NAMESPACE=dedalus-monitoring
@@ -486,9 +473,7 @@ MONITORING_NAMESPACE=dedalus-monitoring
 
 #### How to install
 
-> :warning: **You can complete this step with the following permissions:**  
->
-> * **MONITORING_NAMESPACE Admin**
+> :warning: **You need MONITORING_NAMESPACE Admin role for this section**
 
 Create the *dashboards presets* including dependencies:
 
