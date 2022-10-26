@@ -10,6 +10,7 @@ References:
 * <https://github.com/grafana-operator/grafana-operator>
 
 ---
+## Index
 
 * 1. [Prerequisites](#Prerequisites)
 * 2. [Installation](#Installation)
