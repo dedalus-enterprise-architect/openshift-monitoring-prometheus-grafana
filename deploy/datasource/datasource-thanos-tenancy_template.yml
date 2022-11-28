@@ -1,0 +1,55 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: dedalus-grafana-template
+metadata:
+  annotations:
+    description: |-
+      Grafana datasource definition 
+      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/master/README.md.
+    iconClass: icon-d4center
+    tags: dedalus-grafana,dedalus
+  name: dedalus-grafana
+objects:
+# :::
+# ::: Grafana Data Source
+# :::
+- apiVersion: integreatly.org/v1alpha1
+  kind: GrafanaDataSource
+  metadata:
+    name: prometheus-${TARGET_NAMESPACE}
+    labels:
+      app: grafana-dedalus
+  spec:
+    datasources:
+      - access: proxy
+        editable: true
+        isDefault: true
+        jsonData:
+          httpHeaderName1: Authorization
+          timeInterval: 5s
+          tlsSkipVerify: true
+          customQueryParameters: "namespace=${TARGET_NAMESPACE}"
+        name: Thanos-Tenancy-${TARGET_NAMESPACE}
+        secureJsonData:
+          httpHeaderValue1: >-
+            Bearer ${TOKEN_BEARER}
+        type: prometheus
+        url: 'https://${THANOS_TENANCY_URL}'
+    name: prometheus-grafana-ds.yml
+parameters:
+- name: TARGET_NAMESPACE
+  displayName: Openshift namespace for the custom query
+  description: Type the namespace where to limit the datasource
+  required: true
+  value:
+- name: TOKEN_BEARER
+  displayName: Openshift Token Bearer
+  description: Type the Openshift Token
+  required: true
+  value:
+- name: THANOS_TENANCY_URL
+  displayName: Thanos Tenancy URL
+  description: Type the Thanos Tenancy URL (exposed on port 9092)
+  required: true
+  value:
