@@ -1,6 +1,6 @@
 # Grafana Operator Resources
 
-This project explain how to deploy a custom Grafana instance having the following minimum requirements:
+This project explains how to deploy a custom Grafana instance having the following minimum requirements:
 
 * Grafana Operator - community edition starting from version 4.2.0
 * OpenShift/OKD 4.9 or higher
@@ -53,7 +53,7 @@ On OpenShift
 
 ##  2. <a name='Installation'></a>Installation
 
-This is the procedure to install the Grafana Operator, to instantiate a working grafana instance and to configure a grafana datasource and dashboard.
+This is the procedure to install the Grafana Operator, to instantiate a working Grafana instance and to configure a Grafana datasource and dashboard.
 The following components will be installed and configured:
 
 1. Grafana Operator
@@ -248,7 +248,7 @@ parameters:
 
 Accessing the custom metrics collected by Prometheus is possible accessing the Thanos services.
 Thanos has services published on different ports, which one you will use depends on the kind of RBAC that you can assign to
-the grafana service account.
+the Grafana service account.
 
 Here an extensive documentation on what are the differences between the different services:
 
@@ -265,8 +265,8 @@ Thanos instance on port
   * You are going to need view permission on the APPLICATION_NAMESPACE
 
 > :heavy_exclamation_mark: **You must make a choice wich one to configure**
-> * **Thanos-Querier if the Cluster-Admin agrees to assign "cluster-monitor-view" rbac to grafana service account**
-> * **Thanos-Tenancy if the Cluster-Admin DO NOT agree to assign "cluster-monitor-view" rbac to grafana service account**
+> * **Thanos-Querier if the Cluster-Admin agrees to assign "cluster-monitor-view" RBAC to Grafana service account**
+> * **Thanos-Tenancy if the Cluster-Admin DO NOT agree to assign "cluster-monitor-view" RBAC to Grafana service account**
 
 ---
 
@@ -485,7 +485,7 @@ oc process -f grafana-resources/deploy/dashboards/dashboard.template.yml \
 At this point all the services and configurations needed have been installed.
 
 You can connect to grafana using one of the routes that have been created during the installation of the instance.
-Here an example how to review the routes.
+Here is an example how to review the routes.
 
 ```bash
 MONITORING_NAMESPACE=dedalus-monitoring
