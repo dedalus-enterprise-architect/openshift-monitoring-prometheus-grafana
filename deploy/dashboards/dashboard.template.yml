@@ -17,7 +17,7 @@ objects:
 - apiVersion: integreatly.org/v1alpha1
   kind: GrafanaDashboard
   metadata:
-    name: jvm-dashboard
+    name: jvm-dashboard-basic
     labels:
       app: grafana-dedalus
   spec:
@@ -29,7 +29,7 @@ objects:
 - apiVersion: integreatly.org/v1alpha1
   kind: GrafanaDashboard
   metadata:
-    name: jvm-dashboard-basic
+    name: jvm-dashboard-advanced
     labels:
       app: grafana-dedalus
   spec:
