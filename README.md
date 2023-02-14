@@ -10,32 +10,39 @@ References:
 * <https://github.com/grafana-operator/grafana-operator>
 
 ---
+
 ## Index
 
-* 1. [Prerequisites](#Prerequisites)
-* 2. [Installation](#Installation)
-  * 2.1. [Grafana Operator](#GrafanaOperator)
-  * 2.2. [Grafana Operator RBAC](#GrafanaOperatorRBAC)
-  * 2.3. [Grafana Instance](#GrafanaInstance)
-    * 2.3.1. [Instance Basic](#InstanceBasic)
-    * 2.3.2. [Instance oAuth](#InstanceoAuth)
-  * 2.4. [Grafana Datasource](#GrafanaDatasource)
-    * 2.4.1. [Thanos-Querier](#Thanos-Querier)
-    * 2.4.2. [Thanos-Tenancy](#Thanos-Tenancy)
-  * 2.5. [Grafana Dashboard](#GrafanaDashboard)
-    * 2.5.1. [Prerequisites](#Prerequisites-1)
-    * 2.5.2. [How to install](#Howtoinstall)
-  * 2.6. [Check Grafana](#CheckGrafana)
-    * 2.6.1. [grafana-persistent-oauth-access](#grafana-persistent-oauth-access)
-    * 2.6.2. [grafana-persistent-oauth-admin](#grafana-persistent-oauth-admin)
-* 3. [Useful commands](#Usefulcommands)
-  * 3.1. [Check Objects](#CheckObjects)
-  * 3.2. [Enabling the dashboards automatic discovery how to - OPTIONAL](#Enablingthedashboardsautomaticdiscoveryhowto-OPTIONAL)
+- [Grafana Operator Resources](#grafana-operator-resources)
+  - [Index](#index)
+  - [1. Prerequisites](#1-prerequisites)
+  - [2. Installation](#2-installation)
+    - [2.1. Grafana Operator](#21-grafana-operator)
+    - [2.2. Grafana Operator RBAC](#22-grafana-operator-rbac)
+    - [2.3. Grafana Instance](#23-grafana-instance)
+      - [2.3.1. Instance Basic](#231-instance-basic)
+      - [2.3.2. Instance oAuth](#232-instance-oauth)
+    - [2.4. Grafana Datasource](#24-grafana-datasource)
+      - [2.4.1. Thanos-Querier](#241-thanos-querier)
+        - [RBAC for Thanos-Querier](#rbac-for-thanos-querier)
+        - [How to install DataSource to Thanos-Querier](#how-to-install-datasource-to-thanos-querier)
+      - [2.4.2. Thanos-Tenancy](#242-thanos-tenancy)
+        - [Prerequisites for Thanos-Tenancy](#prerequisites-for-thanos-tenancy)
+        - [How to install DataSource to Thanos-Tenancy](#how-to-install-datasource-to-thanos-tenancy)
+    - [2.5. Grafana Dashboard](#25-grafana-dashboard)
+      - [2.5.1. Prerequisites](#251-prerequisites)
+      - [2.5.2. How to install](#252-how-to-install)
+    - [2.6. Check Grafana](#26-check-grafana)
+      - [2.6.1. grafana-persistent-oauth-access](#261-grafana-persistent-oauth-access)
+      - [2.6.2. grafana-persistent-oauth-admin](#262-grafana-persistent-oauth-admin)
+  - [3. Useful commands](#3-useful-commands)
+    - [3.1. Check Objects](#31-check-objects)
+    - [3.2. Enabling the dashboards automatic discovery how to - OPTIONAL](#32-enabling-the-dashboards-automatic-discovery-how-to---optional)
 
 ---
 ---
 
-##  1. <a name='Prerequisites'></a>Prerequisites
+## 1. Prerequisites
 
 On your client
 
@@ -51,7 +58,7 @@ On OpenShift
 ---
 ---
 
-##  2. <a name='Installation'></a>Installation
+## 2. Installation
 
 This is the procedure to install the Grafana Operator, to instantiate a working Grafana instance and to configure a Grafana datasource and dashboard.
 The following components will be installed and configured:
@@ -70,7 +77,7 @@ The following components will be installed and configured:
 ---
 ---
 
-###  2.1. <a name='GrafanaOperator'></a>Grafana Operator
+### 2.1. Grafana Operator
 
 > :warning: **You need Cluster Admin role for this section**
 
@@ -137,7 +144,7 @@ The InstallPlan is set to Manual to avoid automatic update on versions that are 
 ---
 ---
 
-###  2.2. <a name='GrafanaOperatorRBAC'></a>Grafana Operator RBAC
+### 2.2. Grafana Operator RBAC
 
 > :warning: **You need Cluster Admin role for this section**
 
@@ -160,7 +167,7 @@ clusterrole.rbac.authorization.k8s.io/aggregate-grafana-view created
 ---
 ---
 
-###  2.3. <a name='GrafanaInstance'></a>Grafana Instance
+### 2.3. Grafana Instance
 
 Before starting you must choose the preferred template:
 
@@ -174,7 +181,7 @@ Before starting you must choose the preferred template:
 
 ---
 
-####  2.3.1. <a name='InstanceBasic'></a>Instance Basic
+#### 2.3.1. Instance Basic
 
 > :warning: **You need MONITORING_NAMESPACE Admin role for this section if the aggregate RBAC had been created**
 
@@ -190,7 +197,7 @@ oc process -f grafana-resources/deploy/grafana/instance_basic.template.yml \
 
 ---
 
-####  2.3.2. <a name='InstanceoAuth'></a>Instance oAuth
+#### 2.3.2. Instance oAuth
 
 > :warning: **You need Cluster Admin role for this section**
 
@@ -244,7 +251,7 @@ parameters:
 ---
 ---
 
-###  2.4. <a name='GrafanaDatasource'></a>Grafana Datasource
+### 2.4. Grafana Datasource
 
 Accessing the custom metrics collected by Prometheus is possible accessing the Thanos services.
 Thanos has services published on different ports, which one you will use depends on the kind of RBAC that you can assign to
@@ -265,12 +272,49 @@ Thanos instance on port
   * You are going to need view permission on the APPLICATION_NAMESPACE
 
 > :heavy_exclamation_mark: **You must make a choice wich one to configure**
+>
 > * **Thanos-Querier if the Cluster-Admin agrees to assign "cluster-monitor-view" RBAC to Grafana service account**
 > * **Thanos-Tenancy if the Cluster-Admin DO NOT agree to assign "cluster-monitor-view" RBAC to Grafana service account**
 
 ---
+> :heavy_exclamation_mark: **TOKEN_BEARER Variable**
+>
+> In the following steps, you will find a parameter like this:
+>
+> ```bash
+> TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)"
+>```
+>
+>It is expected that the variable **TOKEN_BEARER** will be set with the **output** of the command *"$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)*
 
-####  2.4.1. <a name='Thanos-Querier'></a>Thanos-Querier
+---
+> :warning: **Openshift 4.11**
+>
+> Starting from OpenShift 4.11, the tokens for service accounts have been totally changed.
+>
+> As a temporary workaround, you can use this procedure to have a **TOKEN_BEARER**  
+> Create a secret as follow:
+>
+> ```yaml
+>apiVersion: v1
+>kind: Secret
+>metadata:
+>  name: grafana-serviceaccount-api-token
+>  namespace: $MONITORING_NAMESPACE
+>  annotations:
+>    kubernetes.io/service-account.name: grafana-serviceaccount
+>type: kubernetes.io/service-account-token
+>```
+>
+>To retrieve the value of the token, you can use the following command:
+>
+>```bash
+>oc get secret grafana-serviceaccount-api-token -n $MONITORING_NAMESPACE -o go-template --template="{{.data.token|base64decode}}"
+>```
+>
+>**Openshift 4.11 is not yet fully supported by all of our procedures**
+
+#### 2.4.1. Thanos-Querier
 
 ##### RBAC for Thanos-Querier
 
@@ -344,7 +388,7 @@ parameters:
 
 ---
 
-####  2.4.2. <a name='Thanos-Tenancy'></a>Thanos-Tenancy
+#### 2.4.2. Thanos-Tenancy
 
 ##### Prerequisites for Thanos-Tenancy
 
@@ -418,12 +462,12 @@ parameters:
 ---
 ---
 
-###  2.5. <a name='GrafanaDashboard'></a>Grafana Dashboard
+### 2.5. Grafana Dashboard
 
 Dashboards are resources used by the Grafana instance itself, you can create them on OpenShift to automatically upload them into Grafana.
 This procedure will add 2 preconfigured dashboards to Grafana about Java Metrics.
 
-####  2.5.1. <a name='Prerequisites-1'></a>Prerequisites
+#### 2.5.1. Prerequisites
 
 Dashboards are imported following a *matchExpression* defined into the Grafana instance resource that you have created previously.
 
@@ -463,7 +507,7 @@ MONITORING_NAMESPACE=dedalus-monitoring
 
 **IMPORTANT**: Use the merge type when patching the CRD object.
 
-####  2.5.2. <a name='Howtoinstall'></a>How to install
+#### 2.5.2. How to install
 
 > :warning: **You need MONITORING_NAMESPACE Admin role for this section**
 
@@ -480,7 +524,7 @@ oc process -f grafana-resources/deploy/dashboards/dashboard.template.yml \
 > :warning: **This template will download the dashboard from this repository**
 > **If you need a local installation you can use the file in grafana-resources/deploy/dashboards/standalone**
 
-###  2.6. <a name='CheckGrafana'></a>Check Grafana
+### 2.6. Check Grafana
 
 At this point all the services and configurations needed have been installed.
 
@@ -495,21 +539,22 @@ oc get route -n ${MONITORING_NAMESPACE}
 You should get 2 routes:
 
 * grafana-persistent-oauth-access
-* grafana-persistent-oauth-admin 
+* grafana-persistent-oauth-admin
 
 You can connect to one of the routes and check if you can see the dashboards.
 
 > :warning: **You will see data in the Dashboard only if there are Service Monitor deployed in the namespace.**  
 > **Service monitor are not an Object of this documentation.**
-####  2.6.1. <a name='grafana-persistent-oauth-access'></a>grafana-persistent-oauth-access
+>
+#### 2.6.1. grafana-persistent-oauth-access
+
 This route use OAUTH proxy to login you need to use a user that is existing on Openshift. All the users are Read-Only
 
-####  2.6.2. <a name='grafana-persistent-oauth-admin'></a>grafana-persistent-oauth-admin
+#### 2.6.2. grafana-persistent-oauth-admin
+
 This route is needed for Grafana Administrator Login - Native Authentication. Credentials stored in the secret "grafana-admin-credentials"
 
-
-
-##  3. <a name='Usefulcommands'></a>Useful commands
+## 3. Useful commands
 
 * give the RBAC permission to the SA: *grafana-serviceaccount*
 
@@ -541,7 +586,7 @@ Here is an output example:
 https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
 ```
 
-###  3.1. <a name='CheckObjects'></a>Check Objects
+### 3.1. Check Objects
 
 you can get a list of the created objects as follows:
 
@@ -558,7 +603,7 @@ and pay attention in case you wanted to delete any previously created objects at
    oc delete ClusterRoleBinding grafana-cluster-monitoring-view-binding-@type_here_the_namespace@
 ```
 
-###  3.2. <a name='Enablingthedashboardsautomaticdiscoveryhowto-OPTIONAL'></a>Enabling the dashboards automatic discovery how to - OPTIONAL
+### 3.2. Enabling the dashboards automatic discovery how to - OPTIONAL
 
 > Consider this section as an *OPTIONAL* task because this feature is enabled by default
 

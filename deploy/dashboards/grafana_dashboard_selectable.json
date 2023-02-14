@@ -27,7 +27,7 @@
         }
       ]
     },
-    "description": "Dashboard for Micrometer instrumented applications (Java, Spring Boot, Micronaut)",
+    "description": "Dashboard for Micrometer instrumented applications (backward compatibility)",
     "editable": true,
     "gnetId": 4701,
     "graphTooltip": 1,
@@ -3948,7 +3948,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "JVM (basic metrics) Test",
+    "title": "JVM (basic metrics)",
     "uid": "ccuQzQjnz",
     "version": 5
   }
