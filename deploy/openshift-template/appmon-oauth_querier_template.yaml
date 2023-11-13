@@ -1,0 +1,361 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: appmon-openshift-requirements
+  app: appmon-dedalus
+metadata:
+  annotations:
+    description: |-
+      This template is created to be used only using `oc process`.
+      It will create resources specific to integrate grafana operator to openshift.
+      It will deploy a Grafana Instance with:
+      - oauth proxy authentication
+      - persistent storage
+      A grafana Datasource with:
+      - Prometheus type datasource
+      - connection to Prometheus service on port 9091
+    iconClass: icon-d4center
+    tags: dedalus
+  name: appmon-openshift-requirements
+objects:
+- kind: Secret
+  apiVersion: v1
+  metadata:
+    name: appmon-serviceaccount-api-token
+    namespace: ${MONITORING_NAMESPACE}
+    annotations:
+      kubernetes.io/service-account.name: ${APPMON_SERVICEACCOUNT}
+    labels:
+      app: appmon-dedalus
+  type: kubernetes.io/service-account-token
+# With Oauth Proxy the service account needs a specific annotation to act as Oauth Client
+# https://docs.openshift.com/container-platform/4.12/authentication/using-service-accounts-as-oauth-client.html#service-accounts-as-oauth-clients_using-service-accounts-as-oauth-client
+- kind: ServiceAccount
+  apiVersion: v1
+  metadata:
+    name: ${APPMON_SERVICEACCOUNT}
+    annotations:
+      serviceaccounts.openshift.io/oauth-redirectreference.primary: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"${GRAFANA_INSTANCE_NAME}-route"}}'
+    labels:
+      app: appmon-dedalus
+  secrets:
+    - name: appmon-serviceaccount-api-token
+#################################################################
+- kind: ClusterRoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: grafana-cluster-monitoring-view-binding
+    labels:
+      app: grafana-dedalus
+  subjects:
+    - kind: ServiceAccount
+      namespace: ${MONITORING_NAMESPACE}
+      name: ${APPMON_SERVICEACCOUNT}
+  roleRef:
+    kind: ClusterRole
+    name: cluster-monitoring-view
+    apiGroup: rbac.authorization.k8s.io
+# In this section will be described a list of resources specific to use the Oauth Proxy
+- kind: Secret
+  apiVersion: v1
+  metadata:
+    name: appmon-oauth-proxy
+    labels:
+      app: appmon-dedalus
+  stringData:
+    session_secret: eSbzcacv2L21LLu9
+  type: Opaque
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    labels:
+      config.openshift.io/inject-trusted-cabundle: "true"
+      app: appmon-dedalus
+    name: appmon-oauth-certs
+    namespace: ${MONITORING_NAMESPACE}
+- kind: ClusterRole
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: appmon-oauth-proxy
+    labels:
+      app: appmon-dedalus
+  rules:
+    - verbs:
+        - create
+      apiGroups:
+        - authentication.k8s.io
+      resources:
+        - tokenreviews
+    - verbs:
+        - create
+      apiGroups:
+        - authorization.k8s.io
+      resources:
+        - subjectaccessreviews
+    - verbs:
+        - get
+      apiGroups: 
+        - "*"
+      resources:
+        - configmaps
+- kind: ClusterRoleBinding
+  apiVersion: authorization.openshift.io/v1
+  metadata:
+    name: appmon-oauth-proxy
+    labels:
+      app: appmon-dedalus
+  subjects:
+    - kind: ServiceAccount
+      name: ${APPMON_SERVICEACCOUNT}
+      namespace: ${MONITORING_NAMESPACE}
+  roleRef:
+    kind: ClusterRole
+    name: appmon-oauth-proxy
+##################################################################
+- kind: ClusterRole
+  apiVersion: rbac.authorization.k8s.io/v1 
+  metadata:
+    name: aggregate-grafana-view
+    labels:
+      rbac.authorization.k8s.io/aggregate-to-view: "true" 
+      rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true" 
+  rules:
+  - apiGroups:
+    - grafana.integreatly.org
+    resources:
+    - grafanas
+    - grafanadashboards
+    - grafanadatasources
+    - grafanafolders
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - grafana.integreatly.org
+    resources:
+    - grafanas/status
+    - grafanadashboards/status
+    - grafanadatasources/status
+    - grafanafolders/status
+    verbs:
+    - get
+- kind: Grafana
+  apiVersion: grafana.integreatly.org/v1beta1
+  metadata:
+    namespace: ${MONITORING_NAMESPACE}
+    name: ${GRAFANA_INSTANCE_NAME}
+    labels:
+      app: appmon-dedalus
+      dashboards: "${GRAFANA_INSTANCE_NAME}"
+  spec:
+    persistentVolumeClaim:
+      metadata:
+        labels:
+          app: appmon-dedalus
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: ${STORAGECLASS}
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: 10Gi        
+    route:
+      spec:
+        port:
+          targetPort: https
+        tls:
+          termination: reencrypt
+        to:
+          kind: Service
+          name: ${GRAFANA_INSTANCE_NAME}-service
+          weight: 100
+        wildcardPolicy: None
+    deployment:
+      spec:
+        template:
+          spec:
+            serviceAccountName: ${APPMON_SERVICEACCOUNT}
+            volumes:
+            - name: appmon-tls
+              secret:
+                secretName: appmon-tls
+            - name: appmon-oauth-proxy
+              secret:
+                secretName: appmon-oauth-proxy
+            - name: appmon-oauth-certs
+              configMap:
+                name: appmon-oauth-certs
+            - name: grafana-data
+              persistentVolumeClaim:
+                claimName: ${GRAFANA_INSTANCE_NAME}-pvc
+            containers:
+            - name: grafana
+              volumeMounts:
+                - mountPath: /var/lib/grafana
+                  name: grafana-data
+            - args:
+                - -provider=openshift
+                - -pass-basic-auth=false
+                - -https-address=:9091
+                - -http-address=
+                - -email-domain=*
+                - -upstream=http://localhost:3000
+                # If you uncomment this 2 flags the users will need "cluster-monitor-view" role to access grafana
+                #- '-openshift-sar={"resource": "namespaces", "verb": "get"}'
+                #- '-openshift-delegate-urls={"/": {"resource": "namespaces", "verb": "get"}}'
+                - -tls-cert=/etc/tls/private/tls.crt
+                - -tls-key=/etc/tls/private/tls.key
+                - -client-secret-file=/var/run/secrets/kubernetes.io/serviceaccount/token
+                - -cookie-secret-file=/etc/proxy/secrets/session_secret
+                - -openshift-service-account=${APPMON_SERVICEACCOUNT}
+                - -openshift-ca=/etc/pki/tls/cert.pem
+                - -openshift-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                - -openshift-ca=/etc/proxy/certs/ca-bundle.crt
+                - -skip-auth-regex=^/metrics
+              image: quay.io/openshift/origin-oauth-proxy
+              name: appmon-proxy
+              ports:
+                - containerPort: 9091
+                  name: https
+                  protocol: TCP
+              resources: {}
+              volumeMounts:
+                - mountPath: /etc/tls/private
+                  name: appmon-tls
+                  readOnly: false
+                - mountPath: /etc/proxy/secrets
+                  name: appmon-oauth-proxy
+                  readOnly: false
+                - mountPath: /etc/proxy/certs
+                  name: appmon-oauth-certs
+                  readOnly: false
+    service:
+      metadata:
+        annotations:
+          service.beta.openshift.io/serving-cert-secret-name: appmon-tls
+      spec:
+        ports:
+          - name: https
+            port: 9091
+            protocol: TCP
+            targetPort: https
+    client:
+      preferIngress: false
+    config:
+      log:
+        level: warn
+        mode: console
+      auth.anonymous:
+        enabled: "true"
+      auth:
+        disable_login_form: "false"
+        disable_signout_menu: "true"
+      auth.basic:
+        enabled: "true"
+      auth.proxy:
+        enable_login_token: "true"
+        enabled: "true"
+        header_name: X-Forwarded-User
+        header_property: username
+- kind: GrafanaDatasource
+  apiVersion: grafana.integreatly.org/v1beta1
+  metadata:
+    name: prometheus-ds-${GRAFANA_INSTANCE_NAME}
+    labels:
+      app: appmon-dedalus
+  spec:
+    valuesFrom:
+      - targetPath: "secureJsonData.httpHeaderValue1"
+        valueFrom:
+          secretKeyRef:
+            name: "appmon-serviceaccount-api-token"
+            key: "token"
+    instanceSelector:
+      matchLabels:
+        dashboards: "${GRAFANA_INSTANCE_NAME}"
+    allowCrossNamespaceImport: true
+    datasource:
+      access: proxy
+      editable: true
+      isDefault: true
+      jsonData:
+        httpMethod: POST
+        httpHeaderName1: Authorization
+        timeInterval: 5s
+        tlsSkipVerify: true
+      name: Prometheus
+      secureJsonData:
+        httpHeaderValue1: >-
+          Bearer ${token}
+      type: prometheus
+      url: 'https://${THANOS_URL}'
+- kind: GrafanaDashboard
+  apiVersion: grafana.integreatly.org/v1beta1
+  metadata:
+    name: jvm-dashboard-basic
+    labels:
+      app: appmon-dedalus
+  spec:
+    allowCrossNamespaceImport: true
+    instanceSelector:
+      matchLabels:
+        dashboards: "${GRAFANA_INSTANCE_NAME}"
+    folder: "Dedalus Dashboards"
+    url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_selectable.json
+- kind: GrafanaDashboard
+  apiVersion: grafana.integreatly.org/v1beta1
+  metadata:
+    name: jvm-dashboard-advanced
+    labels:
+      app: appmon-dedalus
+  spec:
+    allowCrossNamespaceImport: true
+    instanceSelector:
+      matchLabels:
+        dashboards: "${GRAFANA_INSTANCE_NAME}"
+    folder: "Dedalus Dashboards"
+    url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_advanced_selectable.json
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    namespace: ${MONITORING_NAMESPACE}
+    name: ${GRAFANA_INSTANCE_NAME}-admin
+    labels:
+      app: grafana-dedalus
+  spec:
+    port:
+      targetPort: grafana
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+    to:
+      kind: Service
+      name: ${GRAFANA_INSTANCE_NAME}-service
+parameters:
+- name: MONITORING_NAMESPACE
+  displayName: Type the Namespace "name"
+  description: Namespace "name" where all the resources of AppMon will be deployed
+  required: true
+  value: dedalus-monitoring
+- name: APPMON_SERVICEACCOUNT
+  displayName: Type the ServiceAccount "name"
+  description: The service account that will be created and used by AppMon resources
+  required: true
+  value: appmon-serviceaccount
+- name: GRAFANA_INSTANCE_NAME
+  displayName: Type a name for the Grafana Instance
+  description: This value will be also used to attacch the Dashboards and Datasources created by this template to the instance
+  required: true
+  value: appmon-oauth-querier
+- name: THANOS_URL
+  displayName: Prometheus URL
+  description: Type the Prometheus URL you can use the service on port 9091 or 9092
+  required: true
+  value: thanos-querier.openshift-monitoring.svc.cluster.local:9091
+- name: STORAGECLASS
+  displayName: Storage Class Name
+  description: Type the Storage Class Name the pod will use to request PVC
+  required: true
+  value: gp3-csi

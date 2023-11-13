@@ -1,0 +1,30 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: appmon-dedalus
+    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    template: appmon-openshift-requirements
+  name: aggregate-grafana-view
+rules:
+- apiGroups:
+  - grafana.integreatly.org
+  resources:
+  - grafanas
+  - grafanadashboards
+  - grafanadatasources
+  - grafanafolders
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - grafana.integreatly.org
+  resources:
+  - grafanas/status
+  - grafanadashboards/status
+  - grafanadatasources/status
+  - grafanafolders/status
+  verbs:
+  - get

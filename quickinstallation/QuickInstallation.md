@@ -79,7 +79,7 @@ You have to give the permission to the grafana user to view the APPLICATION_NAME
 APPLICATION_NAMESPACE=dedalus-app
 MONITORING_NAMESPACE=dedalus-monitoring
 
-oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:grafana-serviceaccount -n ${APPLICATION_NAMESPACE}
+oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:appmon-serviceaccount -n ${APPLICATION_NAMESPACE}
 ```
 
 ## MONITORING_NAMESPACE-Admin
@@ -95,7 +95,7 @@ MONITORING_NAMESPACE=dedalus-monitoring
 
 oc process -f grafana-resources/quickinstallation/quickinstallation_namespaceadmin_querier.yaml \
 -p NAMESPACE=$MONITORING_NAMESPACE \
--p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)" \
+-p TOKEN_BEARER="$(oc serviceaccounts get-token appmon-serviceaccount -n $MONITORING_NAMESPACE)" \
 -p THANOS_QUERIER_URL=@ask_to_the_cluster_admin@ \
 | oc -n $MONITORING_NAMESPACE create -f -
 ```
@@ -110,7 +110,7 @@ MONITORING_NAMESPACE=dedalus-monitoring
 
 oc process -f grafana-resources/quickinstallation/quickinstallation_namespaceadmin_tenancy.yaml \
 -p NAMESPACE=$MONITORING_NAMESPACE \
--p TOKEN_BEARER="$(oc serviceaccounts get-token grafana-serviceaccount -n $MONITORING_NAMESPACE)" \
+-p TOKEN_BEARER="$(oc serviceaccounts get-token appmon-serviceaccount -n $MONITORING_NAMESPACE)" \
 -p THANOS_TENANCY_URL=@ask_to_the_cluster_admin@ \
 -p TARGET_NAMESPACE=$APPLICATION_NAMESPACE \
 | oc -n $MONITORING_NAMESPACE create -f -

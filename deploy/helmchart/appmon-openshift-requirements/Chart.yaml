@@ -1,0 +1,12 @@
+description: |-
+  This template is created to be used only using `oc process`.
+  It will create resources specific to integrate grafana operator to openshift.
+  It will deploy a Grafana Instance with:
+  - basic authentication
+  - ephemereal storage
+  A grafana Datasource with:
+  - Prometheus type
+  - connection to Prometheus service on port 9091
+name: appmon-openshift-requirements
+tags: dedalus
+version: v0.0.1

@@ -5,14 +5,14 @@ labels:
 metadata:
   annotations:
     description: |-
-      Grafana Operator ClusterRoleBinding needed by grafana-serviceaccount to connect to thanos querier on port 9091
+      Grafana Operator ClusterRoleBinding needed by appmon-serviceaccount to connect to thanos querier on port 9091
       For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/master/README.md.
     iconClass: icon-d4center
     tags: dedalus-grafanaoperator,dedalus
   name: dedalus-grafanaoperator
 objects:
 # :::
-# ::: cluster role binding: give the RBAC cluster-monitoring-view permission to the grafana-serviceaccount
+# ::: cluster role binding: give the RBAC cluster-monitoring-view permission to the appmon-serviceaccount
 # :::
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: ClusterRoleBinding
@@ -23,7 +23,7 @@ objects:
   subjects:
     - kind: ServiceAccount
       namespace: ${NAMESPACE}
-      name: grafana-serviceaccount
+      name: appmon-serviceaccount
   roleRef:
     kind: ClusterRole
     name: cluster-monitoring-view

@@ -11,56 +11,45 @@ metadata:
     tags: dedalus-grafana,dedalus
   name: dedalus-grafana
 objects:
-# :::
-# ::: cluster role binding: give the RBAC cluster-monitoring-view permission to the grafana-serviceaccount
-# :::
-# - apiVersion: authorization.openshift.io/v1
-#   kind: ClusterRoleBinding
-#   metadata:
-#     name: grafana-cluster-monitoring-view-binding
-#     labels:
-#       app: grafana-dedalus
-#   subjects:
-#   - kind: ServiceAccount
-#     name: grafana-serviceaccount
-#     namespace: dedalus-monitoring
-#   roleRef:
-#     kind: ClusterRole
-#     name: cluster-monitoring-view
-#     apiGroup: rbac.authorization.k8s.io
-# :::
-# ::: Grafana Data Source
-# :::
-- apiVersion: integreatly.org/v1alpha1
-  kind: GrafanaDataSource
+- apiVersion: grafana.integreatly.org/v1beta1
+  kind: GrafanaDatasource
   metadata:
     name: prometheus-grafana-ds
     labels:
-      app: grafana-dedalus
+      app: appmon-dedalus
   spec:
-    datasources:
-      - access: proxy
-        editable: true
-        isDefault: true
-        jsonData:
-          httpHeaderName1: Authorization
-          timeInterval: 5s
-          tlsSkipVerify: true
-        name: Thanos-Querier
-        secureJsonData:
-          httpHeaderValue1: >-
-            Bearer ${TOKEN_BEARER}
-        type: prometheus
-        url: 'https://${THANOS_QUERIER_URL}'
-    name: prometheus-grafana-ds.yml
+    valuesFrom:
+      - targetPath: "secureJsonData.httpHeaderValue1"
+        valueFrom:
+          secretKeyRef:
+            name: "appmon-serviceaccount-api-token"
+            key: "token"
+    instanceSelector:
+      matchLabels:
+        dashboards: "appmon-basic"
+    allowCrossNamespaceImport: true
+    datasource:
+      access: proxy
+      editable: true
+      isDefault: true
+      jsonData:
+        httpHeaderName1: Authorization
+        timeInterval: 5s
+        tlsSkipVerify: true
+      name: Prometheus
+      secureJsonData:
+        httpHeaderValue1: >-
+          Bearer ${token}
+      type: prometheus
+      url: 'https://${PROMETHEUS_URL}'
 parameters:
 - name: TOKEN_BEARER
   displayName: Openshift Token Bearer
   description: Type the Openshift Token
-  required: true
+  required: false
   value:
-- name: THANOS_QUERIER_URL
+- name: PROMETHEUS_URL
   displayName: Thanos Querier URL
-  description: Type the Thanos querier URL (https://thanos-querier.namespace.svc.cluster.local:9091)
+  description: Type the Thanos querier URL (prometheus-k8s.openshift-monitoring.svc.cluster.local:9091)
   required: true
-  value:
+  value: prometheus-k8s.openshift-monitoring.svc.cluster.local:9091

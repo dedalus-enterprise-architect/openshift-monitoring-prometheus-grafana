@@ -77,7 +77,7 @@ objects:
         - -tls-key=/etc/tls/private/tls.key
         - -client-secret-file=/var/run/secrets/kubernetes.io/serviceaccount/token
         - -cookie-secret-file=/etc/proxy/secrets/session_secret
-        - -openshift-service-account=grafana-serviceaccount
+        - -openshift-service-account=appmon-serviceaccount
         - -openshift-ca=/etc/pki/tls/cert.pem
         - -openshift-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         - -openshift-ca=/etc/grafana-configmaps/grafana-oauth-certs/ca-bundle.crt

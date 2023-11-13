@@ -1,0 +1,91 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: appmon-openshift-requirements
+  app: appmon-dedalus
+metadata:
+  annotations:
+    description: |-
+      This template is created to be used only using `oc process`.
+      It will create resources specific to integrate grafana operator to openshift.
+    iconClass: icon-d4center
+    tags: dedalus
+  name: appmon-openshift-requirements
+objects:
+#- apiVersion: v1
+#  kind: Namespace
+#  name: ${MONITORING_NAMESPACE}
+#  spec:
+#    finalizers:
+#      - kubernetes
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: appmon-serviceaccount-api-token
+    namespace: ${MONITORING_NAMESPACE}
+    annotations:
+      kubernetes.io/service-account.name: ${APPMON_SERVICEACCOUNT}
+    labels:
+      app: appmon-dedalus
+  type: kubernetes.io/service-account-token
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: ${APPMON_SERVICEACCOUNT}
+    labels:
+      app: appmon-dedalus
+  secrets:
+    - name: appmon-serviceaccount-api-token
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: grafana-cluster-monitoring-view-binding
+    labels:
+      app: grafana-dedalus
+  subjects:
+    - kind: ServiceAccount
+      namespace: ${MONITORING_NAMESPACE}
+      name: ${APPMON_SERVICEACCOUNT}
+  roleRef:
+    kind: ClusterRole
+    name: cluster-monitoring-view
+    apiGroup: rbac.authorization.k8s.io
+- kind: ClusterRole
+  apiVersion: rbac.authorization.k8s.io/v1 
+  metadata:
+    name: aggregate-grafana-view
+    labels:
+      rbac.authorization.k8s.io/aggregate-to-view: "true" 
+      rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true" 
+  rules:
+  - apiGroups:
+    - grafana.integreatly.org
+    resources:
+    - grafanas
+    - grafanadashboards
+    - grafanadatasources
+    - grafanafolders
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - grafana.integreatly.org
+    resources:
+    - grafanas/status
+    - grafanadashboards/status
+    - grafanadatasources/status
+    - grafanafolders/status
+    verbs:
+    - get
+parameters:
+- name: MONITORING_NAMESPACE
+  displayName: Type the Namespace "name"
+  description: Namespace "name" that will be created and where all the resources of AppMon will be deployed
+  required: true
+  value: dedalus-monitoring
+- name: APPMON_SERVICEACCOUNT
+  displayName: Type the ServiceAccount "name"
+  description: The service account that will be created and used by AppMon resources
+  required: true
+  value: appmon-serviceaccount

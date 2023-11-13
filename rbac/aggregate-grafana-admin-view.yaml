@@ -7,15 +7,22 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true" 
 rules:
 - apiGroups:
-  - "integreatly.org"
+  - grafana.integreatly.org
   resources:
   - grafanas
-  - grafanas/status
-  - grafanas/finalizers
   - grafanadashboards
   - grafanadatasources
-  - grafanadatasources/status
+  - grafanafolders
   verbs:
-  - "get"
-  - "list"
-  - "watch"
+  - get
+  - list
+  - watch
+- apiGroups:
+  - grafana.integreatly.org
+  resources:
+  - grafanas/status
+  - grafanadashboards/status
+  - grafanadatasources/status
+  - grafanafolders/status
+  verbs:
+  - get

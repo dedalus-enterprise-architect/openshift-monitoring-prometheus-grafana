@@ -1,0 +1,4 @@
+appmon_serviceaccount: appmon-serviceaccount
+grafana_instance_name: appmon-basic
+monitoring_namespace: dedalus-monitoring
+prometheus_url: prometheus-k8s.openshift-monitoring.svc.cluster.local:9091

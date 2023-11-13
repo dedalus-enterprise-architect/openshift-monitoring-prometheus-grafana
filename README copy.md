@@ -1,11 +1,9 @@
-# Appmon Resources
+# Grafana Operator Resources
 
-This project explains how to deploy a custom Appmon resources.
+This project explains how to deploy a custom Grafana instance having the following minimum requirements:
 
-Appmon is a set of resources that use Grafana Operator and the embended Prometheus in Openshift to visualize metrics
-
-* Grafana Operator - community edition  version 5.4.1
-* OpenShift/OKD 4.12 or higher
+* Grafana Operator - community edition starting from version 4.2.0
+* OpenShift/OKD 4.9 or higher
 
 References:
 
@@ -15,10 +13,11 @@ References:
 
 ## Index
 
-- [Appmon Resources](#appmon-resources)
+- [Grafana Operator Resources](#grafana-operator-resources)
   - [Index](#index)
   - [1. Prerequisites](#1-prerequisites)
-  - [2. Grafana Operator](#2-grafana-operator)
+  - [2. Installation](#2-installation)
+    - [2.1. Grafana Operator](#21-grafana-operator)
     - [2.2. Grafana Operator RBAC](#22-grafana-operator-rbac)
     - [2.3. Grafana Instance](#23-grafana-instance)
       - [2.3.1. Instance Basic](#231-instance-basic)
@@ -50,7 +49,6 @@ On your client
 1. install the OpenShift CLI tool
 2. install the helm CLI
 3. clone the *grafana-resources* repo in your current working folder
-4. Cluster-Admin rights on the Openshift Cluster
 
 able to reach grafana operator image repository
 `ghcr.io/grafana-operator/grafana-operator`
@@ -60,19 +58,33 @@ On OpenShift
 1. at least one namespace (ex. dedalus-app) with a running application exposing metrics already exists
 2. Prometheus configured to grab metrics from user workload
 3. create a dedicated monitoring namespace (ex. *dedalus-monitoring*)
+4. create a dedicated user (ex. *monitoring-user*)
 
 ---
 ---
 
+## 2. Installation
 
+This is the procedure to install the Grafana Operator, to instantiate a working Grafana instance and to configure a Grafana datasource and dashboard.
+The following components will be installed and configured:
+
+1. Grafana Operator
+2. Grafana Operator RBAC
+3. Grafana Instance
+4. Grafana Datasource
+5. Grafana Dashboard
+
+* All this object will be described in details in their own section
+* Different ClusterRoles and Bindings will be added to be compliant with different scenario
+* This installation is trying to cover a scenario where a tenancy segregation is required and one where is not
+* Each command will explain the user level that you need to compelte that command
 
 ---
 ---
 
-## 2. Grafana Operator
+### 2.1. Grafana Operator
 
-References:
-* https://grafana-operator.github.io/grafana-operator/docs/installation/helm/
+> :warning: **You need Cluster Admin role for this section**
 
 ```bash
 MONITORING_NAMESPACE=dedalus-monitoring

@@ -1,0 +1,29 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  labels:
+    app: appmon-dedalus
+    template: appmon-openshift-requirements
+  name: jvm-dashboard-basic
+spec:
+  allowCrossNamespaceImport: true
+  folder: Dedalus Dashboards
+  instanceSelector:
+    matchLabels:
+      dashboards: {{ .Values.grafana_instance_name }}
+  url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_selectable.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  labels:
+    app: appmon-dedalus
+    template: appmon-openshift-requirements
+  name: jvm-dashboard-advanced
+spec:
+  allowCrossNamespaceImport: true
+  folder: Dedalus Dashboards
+  instanceSelector:
+    matchLabels:
+      dashboards: appmon-basic
+  url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_advanced_selectable.json
