@@ -2,7 +2,7 @@ namespaceScope: false
 leaderElect: false
 watchNamespaces: ""
 image:
-  repository: ghcr.io/grafana-operator/grafana-operator
+  repository: "ghcr.io/grafana-operator/grafana-operator"
   pullPolicy: IfNotPresent
   tag: ""
 imagePullSecrets: []
