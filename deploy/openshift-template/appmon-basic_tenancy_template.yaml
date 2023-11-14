@@ -13,7 +13,7 @@ metadata:
       - ephemereal storage
       A grafana Datasource with:
       - Prometheus type
-      - connection to Prometheus service on port 9091
+      - connection to Prometheus service on port 9092
     iconClass: icon-d4center
     tags: dedalus
   name: appmon-openshift-requirements
@@ -31,6 +31,7 @@ objects:
 - kind: ServiceAccount
   apiVersion: v1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: ${APPMON_SERVICEACCOUNT}
     labels:
       app: appmon-dedalus
@@ -91,7 +92,8 @@ objects:
 - kind: GrafanaDatasource
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
-    name: prometheus-${TARGET_NAMESPACE}
+    namespace: ${MONITORING_NAMESPACE}
+    name: prometheus-tenancy-${TARGET_NAMESPACE}
     labels:
       app: appmon-dedalus
   spec:
@@ -108,7 +110,7 @@ objects:
     datasource:
       access: proxy
       editable: true
-      isDefault: true
+      isDefault: false
       jsonData:
         httpMethod: GET
         httpHeaderName1: Authorization
@@ -124,6 +126,7 @@ objects:
 - kind: GrafanaDashboard
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-basic
     labels:
       app: appmon-dedalus
@@ -137,6 +140,7 @@ objects:
 - kind: GrafanaDashboard
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-advanced
     labels:
       app: appmon-dedalus

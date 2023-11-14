@@ -14,9 +14,10 @@ objects:
 # :::
 # ::: Grafana Dashboard: JVM
 # :::
-- apiVersion: grafana.integreatly.org/v1beta1
-  kind: GrafanaDashboard
+- kind: GrafanaDashboard
+  apiVersion: grafana.integreatly.org/v1beta1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-basic
     labels:
       app: appmon-dedalus
@@ -24,12 +25,13 @@ objects:
     allowCrossNamespaceImport: true
     instanceSelector:
       matchLabels:
-        dashboards: "appmon-basic"
+        dashboards: "${GRAFANA_INSTANCE_NAME}"
     folder: "Dedalus Dashboards"
     url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_selectable.json
-- apiVersion: grafana.integreatly.org/v1beta1
-  kind: GrafanaDashboard
+- kind: GrafanaDashboard
+  apiVersion: grafana.integreatly.org/v1beta1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-advanced
     labels:
       app: appmon-dedalus
@@ -37,6 +39,17 @@ objects:
     allowCrossNamespaceImport: true
     instanceSelector:
       matchLabels:
-        dashboards: "appmon-basic"
+        dashboards: "${GRAFANA_INSTANCE_NAME}"
     folder: "Dedalus Dashboards"
     url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_advanced_selectable.json
+parameters:
+- name: MONITORING_NAMESPACE
+  displayName: Type the Namespace "name"
+  description: Namespace "name" where all the resources of AppMon will be deployed
+  required: true
+  value: dedalus-monitoring
+- name: GRAFANA_INSTANCE_NAME
+  displayName: Type a name for the Grafana Instance
+  description: This value will be also used to attacch the Dashboards and Datasources created by this template to the instance
+  required: true
+  value: appmon-oauth-querier

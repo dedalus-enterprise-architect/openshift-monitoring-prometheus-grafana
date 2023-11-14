@@ -31,6 +31,7 @@ objects:
 - kind: ServiceAccount
   apiVersion: v1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: ${APPMON_SERVICEACCOUNT}
     labels:
       app: appmon-dedalus
@@ -105,7 +106,8 @@ objects:
 - kind: GrafanaDatasource
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
-    name: prometheus-ds-${GRAFANA_INSTANCE_NAME}
+    namespace: ${MONITORING_NAMESPACE}
+    name: prometheus-querier-${GRAFANA_INSTANCE_NAME}
     labels:
       app: appmon-dedalus
   spec:
@@ -137,6 +139,7 @@ objects:
 - kind: GrafanaDashboard
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-basic
     labels:
       app: appmon-dedalus
@@ -150,6 +153,7 @@ objects:
 - kind: GrafanaDashboard
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-advanced
     labels:
       app: appmon-dedalus

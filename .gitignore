@@ -3,9 +3,13 @@
 .*copy.*
 deploy/helmchart
 deploy/helmchart/*
+deploy/template2helm
+deploy/template2helm/*
 deploy/grafana
 deploy/grafana/*
-deploy/operator/grafanaoperator.template.yml
-deploy/operator/patch-grafana.json
-deploy/operator/patch-grafana.yml
-deploy/datasource/route-thanos-tenancy.yml
+quickinstallation/
+quickinstallation/*
+rbac/
+rbac/*
+old/
+old/*

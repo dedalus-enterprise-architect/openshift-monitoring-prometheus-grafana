@@ -33,6 +33,7 @@ objects:
 - kind: ServiceAccount
   apiVersion: v1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: ${APPMON_SERVICEACCOUNT}
     annotations:
       serviceaccounts.openshift.io/oauth-redirectreference.primary: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"${GRAFANA_INSTANCE_NAME}-route"}}'
@@ -59,6 +60,7 @@ objects:
 - kind: Secret
   apiVersion: v1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: appmon-oauth-proxy
     labels:
       app: appmon-dedalus
@@ -262,7 +264,8 @@ objects:
 - kind: GrafanaDatasource
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
-    name: prometheus-ds-${GRAFANA_INSTANCE_NAME}
+    namespace: ${MONITORING_NAMESPACE}
+    name: prometheus-querier-${GRAFANA_INSTANCE_NAME}
     labels:
       app: appmon-dedalus
   spec:
@@ -294,6 +297,7 @@ objects:
 - kind: GrafanaDashboard
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-basic
     labels:
       app: appmon-dedalus
@@ -307,6 +311,7 @@ objects:
 - kind: GrafanaDashboard
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
+    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-advanced
     labels:
       app: appmon-dedalus
@@ -317,8 +322,8 @@ objects:
         dashboards: "${GRAFANA_INSTANCE_NAME}"
     folder: "Dedalus Dashboards"
     url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_advanced_selectable.json
-- apiVersion: route.openshift.io/v1
-  kind: Route
+- kind: Route
+  apiVersion: route.openshift.io/v1
   metadata:
     namespace: ${MONITORING_NAMESPACE}
     name: ${GRAFANA_INSTANCE_NAME}-admin

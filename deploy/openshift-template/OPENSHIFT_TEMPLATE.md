@@ -1,11 +1,12 @@
 # Openshift Template
+<!-- markdownlint-disable MD004 -->
 
 Here will be explained how to complete the deploy of Appmon resources using Openshift Templates declarative deploy.
 
-# Index
+## Index
 
 - [Openshift Template](#openshift-template)
-- [Index](#index)
+  - [Index](#index)
   - [1. Prerequisites](#1-prerequisites)
   - [2. Procedure](#2-procedure)
     - [2.1 Process the template](#21-process-the-template)
@@ -129,12 +130,15 @@ Rememeber to set the rith value for the STORAGECLASS parameter when using the pe
 
 The templates with the `querier` suffix will connect to the thanos service exposed to port 9091.
 To enable the access to this service the service account running the grafana instance will need to be able to perform the following operation:
+
 ```bash
 "resource": "namespaces", "verb": "get"
 ```
 
 The templates with the `tenancy` suffix will connect to the thanos service exposed to port 9092.
 This service won't need the same RBAC of the `querier` but you will need to create a datasource for each namespace from wich you want to read the metrics.
+(to help with this task you can use this [template](../datasource/datasource-thanos-tenancy_template.yaml))
+
 The service account will still need view access to the namespace from witch the metrics are read, you can grant this permission with this command:
 
 ```bash
