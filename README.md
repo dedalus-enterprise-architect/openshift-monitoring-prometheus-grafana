@@ -23,13 +23,16 @@ References:
     - [2.2 Login to Openshift Cluster using oc client](#22-login-to-openshift-cluster-using-oc-client)
     - [2.3 Install the Grafana Operator using Helm procedure](#23-install-the-grafana-operator-using-helm-procedure)
     - [2.3 Next Steps](#23-next-steps)
-  - [Openshift Templates](#openshift-templates)
+  - [3. Openshift Templates](#3-openshift-templates)
     - [3.1 Process the template](#31-process-the-template)
     - [3.2 Template Parameters](#32-template-parameters)
     - [3.3 Connect to the route](#33-connect-to-the-route)
   - [Other Templates](#other-templates)
     - [basic vs oauth](#basic-vs-oauth)
     - [querier vs tenancy](#querier-vs-tenancy)
+  - [Updating from version 4.2.0 to 5.4.1](#updating-from-version-420-to-541)
+    - [check for the old resources](#check-for-the-old-resources)
+    - [deleting the resources](#deleting-the-resources)
 
 ---
 ---
@@ -128,7 +131,7 @@ You have successfully installed the Grafana Operator, to complete the deploy all
 
 * [Openshift Template](#openshift-templates)
 
-## Openshift Templates
+## 3. Openshift Templates
 
 ### 3.1 Process the template
 
@@ -251,3 +254,96 @@ The service account will still need view access to the namespace from witch the 
 ```bash
 oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:appmon-serviceaccount -n ${TARGET_NAMESPACE}
 ```
+
+## Updating from version 4.2.0 to 5.4.1
+
+If you have to update from version 4.2.0 installed using this procedure [here](https://github.com/dedalus-enterprise-architect/grafana-resources/blob/main/README.md)
+
+Or if you are planning to update the Openshift Cluster the best action to take is removing the old 4.2.0
+
+here how to proceed:
+
+### check for the old resources
+
+you can use this command to list all the resources related to the label `app: grafana-dedalus`
+
+```bash
+ oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null
+```
+
+here an example of the output, yours may differ:
+
+```bash
+KIND                    NAME                                      NAMESPACE
+Status                  <none>                                    <none>
+ClusterRole             grafana-proxy-dedalus-monitoring          <none>
+ClusterRoleBinding      grafana-proxy-dedalus-monitoring          <none>
+ClusterRoleBinding      grafana-cluster-monitoring-view-binding   <none>
+ClusterRoleBinding      grafana-proxy-dedalus-monitoring          <none>
+ClusterRole             grafana-proxy-dedalus-monitoring          <none>
+ClusterRoleBinding      grafana-cluster-monitoring-view-binding   <none>
+ConfigMap               grafana-oauth-certs                       dedalus-monitoring
+GrafanaDataSource       prometheus-grafana-ds                     dedalus-monitoring
+Grafana                 grafana-persistent-oauth                  dedalus-monitoring
+OperatorGroup           grafana-operator-group                    dedalus-monitoring
+Subscription            grafana-operator                          dedalus-monitoring
+GrafanaDashboard        jvm-dashboard-basic                       dedalus-monitoring
+GrafanaDashboard        jvm-dashboard                             dedalus-monitoring
+Secret                  grafana-proxy                             dedalus-monitoring
+PersistentVolumeClaim   grafana-pvc                               dedalus-monitoring
+Route                   grafana-persistent-oauth-access           dedalus-monitoring
+Route                   grafana-persistent-oauth-admin            dedalus-monitoring
+```
+
+### deleting the resources
+
+Now you can start deleting the resource releted to the grafana crd.
+You can use your list and delete the resource using the oc client or you can use the following command to speed up the process,
+rememeber to check your list of resources.
+
+```bash
+ for resource in $(oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null | awk '{ print $1","$2","$3 }' | grep "Grafana" | sort -r) ; do oc delete $(echo $resource | awk -F, '{ print $1" "$2" -n "$3 }'); done
+grafanadatasource.integreatly.org "prometheus-grafana-ds" deleted
+grafanadashboard.integreatly.org "jvm-dashboard-basic" deleted
+grafanadashboard.integreatly.org "jvm-dashboard" deleted
+grafana.integreatly.org "grafana-persistent-oauth" deleted
+```
+
+then proceed deleting the rbac created:
+
+```bash
+ for resource in $(oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null | awk '{ print $1","$2","$3 }' | grep "Role" | sort -ur) ; do oc delete $(echo $resource | awk -F, '{ print $1" "$2 }'); done
+clusterrolebinding.rbac.authorization.k8s.io "grafana-proxy-dedalus-monitoring" deleted
+clusterrolebinding.rbac.authorization.k8s.io "grafana-cluster-monitoring-view-binding" deleted
+clusterrole.rbac.authorization.k8s.io "grafana-proxy-dedalus-monitoring" deleted
+```
+
+after that continue deleting the operator resources:
+
+```bash
+for resource in $(oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null | awk '{ print $1","$2","$3 }' | grep -E 'Operator|Subscription' | sort -r) ; do oc delete $(echo $resource | awk -F, '{ print $1" "$2 }'); done
+subscription.operators.coreos.com "grafana-operator" deleted
+operatorgroup.operators.coreos.com "grafana-operator-group" deleted
+```
+
+and the namespace:
+
+```bash
+oc delete namespace dedalus-monitoring
+namespace "dedalus-monitoring" deleted
+```
+
+At this point if you run the command to [check the resources](#check-for-the-old-resources) it should give you an empty list,
+but there are few resources with no labels that we need to take care of so,
+
+issue this command to get rid of the crd created by the operator:
+
+```bash
+for crd in $(oc get crd | grep grafana | awk '{ print $1 }'); do oc delete crd $crd ; done
+customresourcedefinition.apiextensions.k8s.io "grafanadashboards.integreatly.org" deleted
+customresourcedefinition.apiextensions.k8s.io "grafanadatasources.integreatly.org" deleted
+customresourcedefinition.apiextensions.k8s.io "grafananotificationchannels.integreatly.org" deleted
+customresourcedefinition.apiextensions.k8s.io "grafanas.integreatly.org" deleted
+```
+
+Now that you have a clean environment you can install the [new version](#1-prerequisites)
