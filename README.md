@@ -129,7 +129,7 @@ grafana-operator        dedalus-monitoring      1               2023-11-13 16:25
 
 You have successfully installed the Grafana Operator, to complete the deploy all the AppMon resources please refer to the documentation:
 
-* [Openshift Template](#openshift-templates)
+* [Openshift Template](#3-openshift-templates)
 
 ## 3. Openshift Templates
 
@@ -247,7 +247,6 @@ To enable the access to this service the service account running the grafana ins
 The templates with the `tenancy` suffix will connect to the thanos service exposed to port 9092.
 This service won't need the same RBAC of the `querier` but you will need to create a datasource for each namespace from wich you want to read the metrics.
 (to help with this task you can use this [template](deploy/openshift-template/datasource/datasource-thanos-tenancy_template.yaml))
-
 
 The service account will still need view access to the namespace from witch the metrics are read, you can grant this permission with this command:
 
