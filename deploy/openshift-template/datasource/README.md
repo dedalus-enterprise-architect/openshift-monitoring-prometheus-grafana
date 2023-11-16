@@ -1,5 +1,8 @@
 # Grafana Datasources
+<!-- markdownlint-disable MD004 MD034 -->
+
 Reference:
+
 * https://grafana-operator.github.io/grafana-operator/docs/
 * https://cloud.redhat.com/blog/thanos-querier-versus-thanos-querier
 
@@ -12,7 +15,7 @@ The datasource added must meet the following requirements:
 * a JSON dashboard stored locally or on a remote location must exist
 
 ## Token Bearer
- 
+
  You can configure the datasource for reading the Token Bearer, to authenticate with Prometheus, directly from a secret using `spec.Valuesfom`
 
  ```yaml

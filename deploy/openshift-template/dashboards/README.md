@@ -1,6 +1,8 @@
 # Grafana Dashboards
+<!-- markdownlint-disable MD004 MD034 -->
 
 Reference:
+
 * https://grafana-operator.github.io/grafana-operator/docs/
 
 This paragraph describes how does the Grafana Dashboard works.
@@ -15,7 +17,7 @@ The dashboard to be added must meet the following requirements:
 * you need to configure `spec.allowCrossNamespaceImport` to true if the dashboard is in a different namespace of the grafana instance
 * a JSON dashboard stored locally or on a remote location must exist
 
-You can see an example [here](./dashboard.template.yaml)
+You can see an example [here](./example/grafana_dashboard_advanced_selectable.yaml)
 
 ## servicemonitor processing
 

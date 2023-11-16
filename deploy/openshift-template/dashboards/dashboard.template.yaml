@@ -18,20 +18,6 @@ objects:
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
     namespace: ${MONITORING_NAMESPACE}
-    name: jvm-dashboard-basic
-    labels:
-      app: appmon-dedalus
-  spec:
-    allowCrossNamespaceImport: true
-    instanceSelector:
-      matchLabels:
-        dashboards: "${GRAFANA_INSTANCE_NAME}"
-    folder: "Dedalus Dashboards"
-    url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_selectable.json
-- kind: GrafanaDashboard
-  apiVersion: grafana.integreatly.org/v1beta1
-  metadata:
-    namespace: ${MONITORING_NAMESPACE}
     name: jvm-dashboard-advanced
     labels:
       app: appmon-dedalus
