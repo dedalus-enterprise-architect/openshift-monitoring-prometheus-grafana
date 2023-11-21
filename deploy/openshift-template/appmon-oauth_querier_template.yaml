@@ -326,27 +326,26 @@ objects:
       name: ${GRAFANA_INSTANCE_NAME}-service
 parameters:
 - name: MONITORING_NAMESPACE
-  displayName: Type the Namespace "name"
-  description: Namespace "name" where all the resources of AppMon will be deployed
+  displayName: AppMon namespace
+  description: Namespace where all the resources of AppMon will be deployed
   required: true
   value: dedalus-monitoring
 - name: APPMON_SERVICEACCOUNT
-  displayName: Type the ServiceAccount "name"
-  description: The service account that will be created and used by AppMon resources
+  displayName: AppMon service account
+  description: Service account to be used by AppMon resources
   required: true
   value: appmon-serviceaccount
 - name: GRAFANA_INSTANCE_NAME
-  displayName: Type a name for the Grafana Instance
-  description: This value will be also used to attacch the Dashboards and Datasources created by this template to the instance
+  displayName: Grafana instance name
+  description: This value will be also used to attach the Dashboards and Datasources created by this template to the Grafana instance
   required: true
   value: appmon-oauth-querier
 - name: THANOS_URL
   displayName: Prometheus URL
-  description: Type the Prometheus URL you can use the service on port 9091 or 9092
+  description: Type the Thanos service address:port (9091 or 9092)
   required: true
   value: thanos-querier.openshift-monitoring.svc.cluster.local:9091
 - name: STORAGECLASS
   displayName: Storage Class Name
-  description: Type the Storage Class Name the pod will use to request PVC
+  description: Storage Class to be used to provision persistent storage
   required: true
-  value: gp3-csi
