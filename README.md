@@ -17,9 +17,7 @@ References:
   - [1. Prerequisites](#1-prerequisites)
   - [2. Grafana Operator](#2-grafana-operator)
     - [2.1 Clone the repo](#21-clone-the-repo)
-    - [2.2 Login to Openshift Cluster using oc client](#22-login-to-openshift-cluster-using-oc-client)
-    - [2.3 Install the Grafana Operator using Helm procedure](#23-install-the-grafana-operator-using-helm-procedure)
-    - [2.3 Next Steps](#23-next-steps)
+    - [2.2 Install the Grafana Operator using its Helm chart](#21-install-the-grafana-operator-using-helm-procedure)
   - [3. Openshift Templates](#3-openshift-templates)
     - [3.1 Process the template](#31-process-the-template)
     - [3.2 Template Parameters](#32-template-parameters)
@@ -30,7 +28,6 @@ References:
   - [Updating from version 4.2.0 to 5.4.1](#updating-from-version-420-to-541)
     - [check for the old resources](#check-for-the-old-resources)
     - [deleting the resources](#deleting-the-resources)
-
 
 ## 1. Prerequisites
 
@@ -47,7 +44,6 @@ On OpenShift
 * one namespace to host AppMon components (ex. _dedalus-monitoring_)
 * a Prometheus instance configured to scrape metrics from user workloads
 
-
 ## 2. Grafana Operator
 
 References:
@@ -58,7 +54,6 @@ The deploy will follow the official procedure using a values.yaml provided by th
 If you are going to change the content of values.yaml rememeber to reflect the changes that you made in the other resources.
 
 ### 2.1 Clone the repo
----
 
 Clone this repository on your client:
 
@@ -66,15 +61,14 @@ Clone this repository on your client:
 git clone https://github.com/dedalus-enterprise-architect/grafana-resources.git --branch v5.4.1
 ```
 
-
 ### 2.2 Install the Grafana Operator using its Helm chart
----
 
 > WARNING: an Admin Cluster Role is required to proceed on this section.
 
 Before proceeding you must be logged in to the OpenShift API server via `oc login` client command.
 
 Set the following variables:
+
 ```bash
 MONITORING_NAMESPACE=dedalus-monitoring
 KUBE_TOKEN=$(oc whoami -t)
@@ -120,7 +114,6 @@ Proceed to the next section to complete the AppMon deployment.
 ## 3. OpenShift templates
 
 ### 3.1 Process the template
----
 
 > WARNING: an Admin Cluster Role is required to proceed on this section.
 
@@ -130,7 +123,6 @@ Set the template parameters needed according to the target environment (ex. _AWS
 MONITORING_NAMESPACE=dedalus-monitoring
 STORAGE_CLASS=gp3-csi
 ```
-
 
 Deploy the template via `oc process` client command:
 
@@ -192,7 +184,6 @@ parameters:
 ```
 
 ### 3.3 AppMon routes
----
 
 Get the OpenShift routes where the services are exposed:
 
@@ -219,7 +210,6 @@ grafana-resources/deploy/openshift-template/
 ├── appmon-basic_tenancy_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Tenancy Datasource
 ├── appmon-oauth_querier_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Querier Datasource (Dedalus Best-Practice)
 └── appmon-oauth_tenancy_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Tenancy Datasource
-
 ```
 
 You can use the template that better suits your needs.
