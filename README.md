@@ -1,17 +1,14 @@
-# Appmon Resources
+# OpenShift AppMon Resources
 <!-- markdownlint-disable MD004 MD034 -->
-This project explains how to deploy a custom Appmon resources.
+AppMon is a set of resources that use Grafana Operator and the embedded Prometheus engine in OpenShift to visualize metrics published by running applications.
+This project collects some procedures on how to setup a custom AppMon instance based on the following software versions:
 
-Appmon is a set of resources that use Grafana Operator and the embended Prometheus in Openshift to visualize metrics
-
-* Grafana Operator - community edition  version 5.4.1
+* Grafana Operator - Community Edition - version 5.4.1
 * OpenShift/OKD 4.12 or higher
 
 References:
 
 * <https://github.com/grafana-operator/grafana-operator>
-
----
 
 ## Index
 
@@ -34,27 +31,22 @@ References:
     - [check for the old resources](#check-for-the-old-resources)
     - [deleting the resources](#deleting-the-resources)
 
----
----
 
 ## 1. Prerequisites
 
 On your client
 
-1. install the OpenShift CLI tool
-2. install the helm CLI v3.11+
-3. Cluster-Admin rights on the Openshift Cluster
-
-able to reach grafana operator image repository
-`ghcr.io/grafana-operator/grafana-operator`
+* OpenShift client utility: ```oc```
+* Helm client utility v3.11 or higher: ```helm```
+* OpenShift cluster admin privileges
+* Access to Grafana Operator image repository `ghcr.io/grafana-operator/grafana-operator`
 
 On OpenShift
 
-1. at least one namespace (ex. dedalus-app) with a running application exposing metrics already exists
-2. Prometheus configured to grab metrics from user workload
+* at least one namespace (ex. _dedalus-app_) with a running application exposing metrics should exists
+* one namespace to host AppMon components (ex. _dedalus-monitoring_)
+* a Prometheus instance configured to scrape metrics from user workloads
 
----
----
 
 ## 2. Grafana Operator
 
@@ -66,35 +58,36 @@ The deploy will follow the official procedure using a values.yaml provided by th
 If you are going to change the content of values.yaml rememeber to reflect the changes that you made in the other resources.
 
 ### 2.1 Clone the repo
+---
 
-As a first step we are going to create a working directory and clone there the repository:
+Clone this repository on your client:
 
 ```bash
-WORKING_DIRECTORY=/opt/git_testing
-
-mkdir -vp ${WORKING_DIRECTORY}
-cd ${WORKING_DIRECTORY}
-
 git clone https://github.com/dedalus-enterprise-architect/grafana-resources.git --branch v5.4.1
 ```
 
+
+### 2.2 Install the Grafana Operator using its Helm chart
 ---
 
-### 2.2 Login to Openshift Cluster using oc client
+> WARNING: an Admin Cluster Role is required to proceed on this section.
 
----
+Before proceeding you must be logged in to the OpenShift API server via `oc login` client command.
 
-### 2.3 Install the Grafana Operator using Helm procedure
-
+Set the following variables:
 ```bash
 MONITORING_NAMESPACE=dedalus-monitoring
 KUBE_TOKEN=$(oc whoami -t)
 KUBE_APISERVER=$(oc whoami --show-server=true)
+```
 
+deploy the Grafana Operator:
+
+```bash
 helm upgrade -i grafana-operator oci://ghcr.io/grafana-operator/helm-charts/grafana-operator --version v5.4.1 --values grafana-resources/deploy/operator/values.yaml -n $MONITORING_NAMESPACE --create-namespace --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
 ```
 
-The output should be
+then the output should be:
 
 ```bash
 Release "grafana-operator" does not exist. Installing it now.
@@ -108,38 +101,47 @@ REVISION: 1
 TEST SUITE: None
 ```
 
-To check the installation you can also run this command:
+to check the installation you can also run this command:
 
 ```bash
-MONITORING_NAMESPACE=dedalus-monitoring
-KUBE_TOKEN=$(oc whoami -t)
-KUBE_APISERVER=$(oc whoami --show-server=true)
-
 helm list -n ${MONITORING_NAMESPACE} --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
 ```
 
-you will get the following output:
+you should get the following output:
 
 ```bash
 NAME                    NAMESPACE               REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
 grafana-operator        dedalus-monitoring      1               2023-11-13 16:25:29.160445089 +0100 CET deployed        grafana-operator-v5.4.1 v5.4.1
 ```
 
-### 2.3 Next Steps
+You have successfully installed the Grafana Operator.
+Proceed to the next section to complete the AppMon deployment.
 
-You have successfully installed the Grafana Operator, to complete the deploy all the AppMon resources please refer to the documentation:
-
-* [Openshift Template](#3-openshift-templates)
-
-## 3. Openshift Templates
+## 3. OpenShift templates
 
 ### 3.1 Process the template
+---
+
+> WARNING: an Admin Cluster Role is required to proceed on this section.
+
+Set the template parameters needed according to the target environment (ex. _AWS Cloud_)
 
 ```bash
-oc process -f grafana-resources/deploy/openshift-template/appmon-oauth_querier_template.yaml | oc apply -f -
+MONITORING_NAMESPACE=dedalus-monitoring
+STORAGE_CLASS=gp3-csi
 ```
 
-here the output:
+
+Deploy the template via `oc process` client command:
+
+```bash
+oc process -f grafana-resources/deploy/openshift-template/appmon-oauth_querier_template.yaml \
+-p MONITORING_NAMESPACE=$MONITORING_NAMESPACE \
+-p STORAGECLASS=$STORAGE_CLASS \
+| oc apply -f -
+```
+
+you should get the following output:
 
 ```bash
 Warning: resource serviceaccounts/appmon-serviceaccount is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by oc apply. oc apply should only be used on resources created declaratively by either oc create --save-config or oc apply. The missing annotation will be patched automatically.
@@ -157,42 +159,42 @@ grafanadashboard.grafana.integreatly.org/jvm-dashboard-advanced created
 route.route.openshift.io/appmon-oauth-querier-admin created
 ```
 
-### 3.2 Template Parameters
+### 3.2 Template parameters
 
-here the list of the accepted parameters and their defaults:
+The following is a list of the accepted template parameters and their default values:
 
-```bash
+```yaml
 parameters:
 - name: MONITORING_NAMESPACE
-  displayName: Type the Namespace "name"
-  description: Namespace "name" where all the resources of AppMon will be deployed
+  displayName: AppMon namespace
+  description: Namespace where all the resources of AppMon will be deployed
   required: true
   value: dedalus-monitoring
 - name: APPMON_SERVICEACCOUNT
-  displayName: Type the ServiceAccount "name"
-  description: The service account that will be created and used by AppMon resources
+  displayName: AppMon service account
+  description: Service account to be used by AppMon resources
   required: true
   value: appmon-serviceaccount
 - name: GRAFANA_INSTANCE_NAME
-  displayName: Type a name for the Grafana Instance
-  description: This value will be also used to attacch the Dashboards and Datasources created by this template to the instance
+  displayName: Grafana instance name
+  description: This value will be also used to attach the Dashboards and Datasources created by this template to the Grafana instance
   required: true
   value: appmon-oauth-querier
 - name: THANOS_URL
-  displayName: Prometheus URL
-  description: Type the Prometheus URL you can use the service on port 9091 or 9092
+  displayName: Thanos service address:port
+  description: Thanos service address:port (9091 or 9092)
   required: true
   value: thanos-querier.openshift-monitoring.svc.cluster.local:9091
 - name: STORAGECLASS
   displayName: Storage Class Name
-  description: Type the Storage Class Name the pod will use to request PVC
+  description: Storage Class to be used to provision persistent storage
   required: true
-  value: gp3-csi
 ```
 
-### 3.3 Connect to the route
+### 3.3 AppMon routes
+---
 
-use this command to get the routes where the service is exposed:
+Get the OpenShift routes where the services are exposed:
 
 ```bash
 oc get route -n dedalus-monitoring
@@ -203,18 +205,18 @@ appmon-oauth-querier-route   appmon-oauth-querier-route-dedalus-monitoring.apps.
 
 ```
 
-the route named `*-admin` won't use the Oauth Proxy but the admin credentials into the secret `{GRAFANA_INSTANCE_NAME}-admin-credentials`.
+> The `*-admin` route won't use the _OAuth Proxy_ for authentication, but instead will require the admin credentials provided in the secret
+`{GRAFANA_INSTANCE_NAME}-admin-credentials`.
+The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
 
-the route named `*-route` will use the Oauth Proxy giving only "Read-Only" access.
-
-## Other Templates
+## Other templates
 
 How you can check there are other templates ready for other scenario
 
 ```bash
 grafana-resources/deploy/openshift-template/
-├── appmon-basic_querier_template.yaml #Ephimeral Storage, Basic Authentication, Thanos Querier Datasource
-├── appmon-basic_tenancy_template.yaml #Ephimeral Storage, Basic Authentication, Thanos Tenancy Datasource
+├── appmon-basic_querier_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Querier Datasource
+├── appmon-basic_tenancy_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Tenancy Datasource
 ├── appmon-oauth_querier_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Querier Datasource (Dedalus Best-Practice)
 └── appmon-oauth_tenancy_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Tenancy Datasource
 
@@ -224,31 +226,31 @@ You can use the template that better suits your needs.
 
 Be sure to check the parameter accepted by the template that you are going to use.
 
-### basic vs oauth
+### Difference between Basic vs. OAuth
 
-The templates with the `basic` suffix will offer the bare minum to run all the resources and no persitance at all.
+The templates with the `basic` suffix will offer the bare minimum to run all the resources and no persistance at all.
 
 The templates with the `oauth` suffix will create extra resources to enable the following features:
 
 * OAuth Proxy Authentication
 * Persistent Storage
 
-Rememeber to set the rith value for the STORAGECLASS parameter when using the persistant storage.
+Remember to set the right value for the STORAGECLASS parameter when using the persistent storage.
 
-### querier vs tenancy
+### Querier vs. Tenancy
 
-The templates with the `querier` suffix will connect to the thanos service exposed to port 9091.
-To enable the access to this service the service account running the grafana instance will need to be able to perform the following operation:
+The templates with the `querier` suffix will connect to the _Thanos_ service exposed to port `9091`.
+Grafana instance service account requires the following privilege to access _Thanos_ service:
 
 ```bash
 "resource": "namespaces", "verb": "get"
 ```
 
-The templates with the `tenancy` suffix will connect to the thanos service exposed to port 9092.
+The templates with the `tenancy` suffix will connect to the _Thanos_ service exposed to port `9092`.
 This service won't need the same RBAC of the `querier` but you will need to create a datasource for each namespace from wich you want to read the metrics.
 (to help with this task you can use this [template](deploy/openshift-template/datasource/datasource-thanos-tenancy_template.yaml))
 
-The service account will still need view access to the namespace from witch the metrics are read, you can grant this permission with this command:
+The service account will still need `view` access to the namespace from which the metrics are read, you can grant this permission with this command:
 
 ```bash
 oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:appmon-serviceaccount -n ${TARGET_NAMESPACE}
@@ -258,9 +260,9 @@ oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE
 
 If you have to update from version 4.2.0 installed using this procedure [here](https://github.com/dedalus-enterprise-architect/grafana-resources/blob/main/README.md)
 
-Or if you are planning to update the Openshift Cluster the best action to take is removing the old 4.2.0
+Or if you are planning to update the OpenShift cluster the best action to take is removing the old 4.2.0
 
-here how to proceed:
+Here is how to proceed:
 
 ### check for the old resources
 
@@ -270,7 +272,7 @@ you can use this command to list all the resources related to the label `app: gr
  oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null
 ```
 
-here an example of the output, yours may differ:
+Here is a sample output:
 
 ```bash
 KIND                    NAME                                      NAMESPACE
@@ -296,9 +298,9 @@ Route                   grafana-persistent-oauth-admin            dedalus-monito
 
 ### deleting the resources
 
-Now you can start deleting the resource releted to the grafana crd.
+Now you can start deleting the resource releted to the Grafana _CRD_.
 You can use your list and delete the resource using the oc client or you can use the following command to speed up the process,
-rememeber to check your list of resources.
+remember to check your list of resources.
 
 ```bash
  for resource in $(oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null | awk '{ print $1","$2","$3 }' | grep "Grafana" | sort -r) ; do oc delete $(echo $resource | awk -F, '{ print $1" "$2" -n "$3 }'); done
@@ -335,7 +337,7 @@ namespace "dedalus-monitoring" deleted
 At this point if you run the command to [check the resources](#check-for-the-old-resources) it should give you an empty list,
 but there are few resources with no labels that we need to take care of so,
 
-issue this command to get rid of the crd created by the operator:
+issue this command to get rid of the _CRD_ created by the operator:
 
 ```bash
 for crd in $(oc get crd | grep grafana | awk '{ print $1 }'); do oc delete crd $crd ; done
