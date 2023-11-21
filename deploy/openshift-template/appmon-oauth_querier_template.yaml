@@ -341,8 +341,8 @@ parameters:
   required: true
   value: appmon-oauth-querier
 - name: THANOS_URL
-  displayName: Prometheus URL
-  description: Type the Thanos service address:port (9091 or 9092)
+  displayName: Thanos service address:port
+  description: Thanos service address:port (9091 or 9092)
   required: true
   value: thanos-querier.openshift-monitoring.svc.cluster.local:9091
 - name: STORAGECLASS
