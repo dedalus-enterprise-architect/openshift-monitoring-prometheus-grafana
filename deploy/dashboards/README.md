@@ -12,6 +12,8 @@ The dashboard to be added must meet the following requirements:
 
 * a JSON dashboard stored locally or on a remote location must exist
 
+You can find an example on how to create a manifest for a bashboard on ```deploy/dashboards/example```
+
 ## servicemonitor processing
 
 ```bash

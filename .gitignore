@@ -1,2 +1,15 @@
 **/.vscode-upload.json
 **/.vscode/**
+.*copy.*
+deploy/helmchart
+deploy/helmchart/*
+deploy/template2helm
+deploy/template2helm/*
+deploy/grafana
+deploy/grafana/*
+quickinstallation/
+quickinstallation/*
+rbac/
+rbac/*
+old/
+old/*

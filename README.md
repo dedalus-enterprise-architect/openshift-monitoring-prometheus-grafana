@@ -1,4 +1,5 @@
 # Grafana Operator Resources
+<!-- markdownlint-disable MD004 MD034 -->
 
 This project explains how to deploy a custom Grafana instance having the following minimum requirements:
 
