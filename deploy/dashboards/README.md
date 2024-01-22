@@ -8,7 +8,7 @@ The application to be monitored must meet the following requirements:
 
 The dashboard to be added must meet the following requirements:
 
-* a label named: "dedalus-grafana" must be defined
+* a label named: "dedalus-grafana" must be defined.
 
 * a JSON dashboard stored locally or on a remote location must exist
 
