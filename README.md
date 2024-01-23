@@ -18,16 +18,11 @@ References:
   - [2. Grafana Operator](#2-grafana-operator)
     - [2.1 Clone the repo](#21-clone-the-repo)
     - [2.2 Install the Grafana Operator using its Helm chart](#22-install-the-grafana-operator-using-its-helm-chart)
-  - [3. OpenShift templates](#3-openshift-templates)
-    - [3.1 Process the template](#31-process-the-template)
-    - [3.2 Template parameters](#32-template-parameters)
-    - [3.3 AppMon routes](#33-appmon-routes)
-  - [Other templates](#other-templates)
-    - [Difference between Basic vs. OAuth](#difference-between-basic-vs-oauth)
-    - [Querier vs. Tenancy](#querier-vs-tenancy)
+  - [3. AppMon resources](#3-appmon-resources)
+    - [Supported Deploy Method](#supported-deploy-method)
   - [Updating from version 4.2.0 to 5.4.1](#updating-from-version-420-to-541)
-    - [check for the old resources](#check-for-the-old-resources)
-    - [deleting the resources](#deleting-the-resources)
+    - [Check for the old resources](#check-for-the-old-resources)
+    - [Deleting the resources](#deleting-the-resources)
 
 ## 1. Prerequisites
 
@@ -111,140 +106,14 @@ grafana-operator        dedalus-monitoring      1               2023-11-13 16:25
 You have successfully installed the Grafana Operator.
 Proceed to the next section to complete the AppMon deployment.
 
-## 3. OpenShift templates
+## 3. AppMon resources
 
-### 3.1 Process the template
+For now the only way to deploy in a declarative way all the _AppMon_ resources is using the Openshift Templates.
+For a detailed procedure please read [here](/deploy/openshift-template/OPENSHIFT_TEMPLATE.md)
 
-> WARNING: an Admin Cluster Role is required to proceed on this section.
+### Supported Deploy Method
 
-Set the template parameters needed according to the target environment (ex. _AWS Cloud_)
-
-```bash
-MONITORING_NAMESPACE=dedalus-monitoring
-STORAGE_CLASS=gp3-csi
-```
-
-Deploy the template via `oc process` client command:
-
-```bash
-oc process -f grafana-resources/deploy/openshift-template/appmon-oauth_querier_template.yaml \
--p MONITORING_NAMESPACE=$MONITORING_NAMESPACE \
--p STORAGECLASS=$STORAGE_CLASS \
-| oc apply -f -
-```
-
-you should get the following output:
-
-```bash
-Warning: resource serviceaccounts/appmon-serviceaccount is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by oc apply. oc apply should only be used on resources created declaratively by either oc create --save-config or oc apply. The missing annotation will be patched automatically.
-serviceaccount/appmon-serviceaccount configured
-clusterrolebinding.rbac.authorization.k8s.io/grafana-cluster-monitoring-view-binding created
-secret/appmon-oauth-proxy created
-configmap/appmon-oauth-certs created
-clusterrole.rbac.authorization.k8s.io/appmon-oauth-proxy created
-clusterrolebinding.authorization.openshift.io/appmon-oauth-proxy created
-clusterrole.rbac.authorization.k8s.io/aggregate-grafana-view created
-grafana.grafana.integreatly.org/appmon-oauth-querier created
-grafanadatasource.grafana.integreatly.org/prometheus-ds-appmon-oauth-querier created
-grafanadashboard.grafana.integreatly.org/jvm-dashboard-basic created
-grafanadashboard.grafana.integreatly.org/jvm-dashboard-advanced created
-route.route.openshift.io/appmon-oauth-querier-admin created
-```
-
-### 3.2 Template parameters
-
-The following is a list of the accepted template parameters and their default values:
-
-```yaml
-parameters:
-- name: MONITORING_NAMESPACE
-  displayName: AppMon namespace
-  description: Namespace where all the resources of AppMon will be deployed
-  required: true
-  value: dedalus-monitoring
-- name: APPMON_SERVICEACCOUNT
-  displayName: AppMon service account
-  description: Service account to be used by AppMon resources
-  required: true
-  value: appmon-serviceaccount
-- name: GRAFANA_INSTANCE_NAME
-  displayName: Grafana instance name
-  description: This value will be also used to attach the Dashboards and Datasources created by this template to the Grafana instance
-  required: true
-  value: appmon-oauth-querier
-- name: THANOS_URL
-  displayName: Thanos service address:port
-  description: Thanos service address:port (9091 or 9092)
-  required: true
-  value: thanos-querier.openshift-monitoring.svc.cluster.local:9091
-- name: STORAGECLASS
-  displayName: Storage Class Name
-  description: Storage Class to be used to provision persistent storage
-  required: true
-```
-
-### 3.3 AppMon routes
-
-Get the OpenShift routes where the services are exposed:
-
-```bash
-oc get route -n dedalus-monitoring
-NAME                         HOST/PORT                                                                                   PATH   SERVICES
-   PORT      TERMINATION     WILDCARD
-appmon-oauth-querier-admin   appmon-oauth-querier-admin-dedalus-monitoring.apps.rubber-cluster.rubberworld.dedalus.aws          appmon-oauth-querier-service   grafana   edge/Redirect   None
-appmon-oauth-querier-route   appmon-oauth-querier-route-dedalus-monitoring.apps.rubber-cluster.rubberworld.dedalus.aws          appmon-oauth-querier-service   https     reencrypt       None
-
-```
-
-> The `*-admin` route won't use the _OAuth Proxy_ for authentication, but instead will require the admin credentials provided in the secret
-`{GRAFANA_INSTANCE_NAME}-admin-credentials`.
-The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
-
-## Other templates
-
-How you can check there are other templates ready for other scenario
-
-```bash
-grafana-resources/deploy/openshift-template/
-├── appmon-basic_querier_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Querier Datasource
-├── appmon-basic_tenancy_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Tenancy Datasource
-├── appmon-oauth_querier_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Querier Datasource (Dedalus Best-Practice)
-└── appmon-oauth_tenancy_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Tenancy Datasource
-```
-
-You can use the template that better suits your needs.
-
-Be sure to check the parameter accepted by the template that you are going to use.
-
-### Difference between Basic vs. OAuth
-
-The templates with the `basic` suffix will offer the bare minimum to run all the resources and no persistance at all.
-
-The templates with the `oauth` suffix will create extra resources to enable the following features:
-
-* OAuth Proxy Authentication
-* Persistent Storage
-
-Remember to set the right value for the STORAGECLASS parameter when using the persistent storage.
-
-### Querier vs. Tenancy
-
-The templates with the `querier` suffix will connect to the _Thanos_ service exposed to port `9091`.
-Grafana instance service account requires the following privilege to access _Thanos_ service:
-
-```bash
-"resource": "namespaces", "verb": "get"
-```
-
-The templates with the `tenancy` suffix will connect to the _Thanos_ service exposed to port `9092`.
-This service won't need the same RBAC of the `querier` but you will need to create a datasource for each namespace from wich you want to read the metrics.
-(to help with this task you can use this [template](deploy/openshift-template/datasource/datasource-thanos-tenancy_template.yaml))
-
-The service account will still need `view` access to the namespace from which the metrics are read, you can grant this permission with this command:
-
-```bash
-oc adm policy add-role-to-user view system:serviceaccount:${MONITORING_NAMESPACE}:appmon-serviceaccount -n ${TARGET_NAMESPACE}
-```
+[- Openshift Template](/deploy/openshift-template/OPENSHIFT_TEMPLATE.md)
 
 ## Updating from version 4.2.0 to 5.4.1
 
@@ -254,7 +123,7 @@ Or if you are planning to update the OpenShift cluster the best action to take i
 
 Here is how to proceed:
 
-### check for the old resources
+### Check for the old resources
 
 you can use this command to list all the resources related to the label `app: grafana-dedalus`
 
@@ -286,7 +155,7 @@ Route                   grafana-persistent-oauth-access           dedalus-monito
 Route                   grafana-persistent-oauth-admin            dedalus-monitoring
 ```
 
-### deleting the resources
+### Deleting the resources
 
 Now you can start deleting the resource releted to the Grafana _CRD_.
 You can use your list and delete the resource using the oc client or you can use the following command to speed up the process,
