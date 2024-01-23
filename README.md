@@ -50,10 +50,12 @@ If you are going to change the content of values.yaml rememeber to reflect the c
 
 ### 2.1 Clone the repo
 
-Clone this repository on your client:
+Clone this repository at the right realease on your client:
 
 ```bash
-git clone https://github.com/dedalus-enterprise-architect/grafana-resources.git --branch v5.4.1
+git clone https://github.com/dedalus-enterprise-architect/grafana-resources.git
+cd grafana-resources/
+git checkout tags/v2.0.0
 ```
 
 ### 2.2 Install the Grafana Operator using its Helm chart
