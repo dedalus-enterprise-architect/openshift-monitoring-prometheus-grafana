@@ -1,18 +1,23 @@
 # Grafana Dashboards
+<!-- markdownlint-disable MD004 MD034 -->
+
+Reference:
+
+* https://grafana-operator.github.io/grafana-operator/docs/
 
 This paragraph describes how does the Grafana Dashboard works.
 
 The application to be monitored must meet the following requirements:
 
-* create the servicemonitor object in the namespace where the POD is runnin in (you can see an example on ```deploy/servicemonitor/servicemonitors.template.yml```)
+* create the servicemonitor object in the namespace where the POD is runnin in (you can see an example on [here](../servicemonitor/dedalus.servicemonitor.yaml))
 
 The dashboard to be added must meet the following requirements:
 
-* a label named: "dedalus-grafana" must be defined.
-
+* must have the `instanceSelectors` defined.
+* you need to configure `spec.allowCrossNamespaceImport` to true if the dashboard is in a different namespace of the grafana instance
 * a JSON dashboard stored locally or on a remote location must exist
 
-You can find an example on how to create a manifest for a bashboard on ```deploy/dashboards/example```
+You can see an example [here](./example/grafana_dashboard_advanced_selectable.yaml)
 
 ## servicemonitor processing
 

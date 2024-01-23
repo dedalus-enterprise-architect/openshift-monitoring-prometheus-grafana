@@ -1,0 +1,43 @@
+namespaceScope: false
+leaderElect: false
+watchNamespaces: ""
+image:
+  repository: "ghcr.io/grafana-operator/grafana-operator"
+  pullPolicy: IfNotPresent
+  tag: ""
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "appmon"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "appmon-serviceaccount"
+
+metricsService:
+  type: ClusterIP
+  metricsPort: 9090
+
+additionalLabels:
+  app: appmon-dedalus
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+
+resources: {}
+
+priorityClassName: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
