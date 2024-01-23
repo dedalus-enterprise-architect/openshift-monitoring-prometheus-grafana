@@ -1,0 +1,71 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: dedalus-grafana-template
+metadata:
+  annotations:
+    description: |-
+      Grafana datasource definition 
+      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/master/README.md.
+    iconClass: icon-d4center
+    tags: dedalus-grafana,dedalus
+  name: dedalus-grafana
+objects:
+# :::
+# ::: Grafana Data Source
+# :::
+- kind: GrafanaDatasource
+  apiVersion: grafana.integreatly.org/v1beta1
+  metadata:
+    namespace: ${MONITORING_NAMESPACE}
+    name: prometheus-tenancy-${GRAFANA_INSTANCE_NAME}
+    labels:
+      app: appmon-dedalus
+  spec:
+    valuesFrom:
+      - targetPath: "secureJsonData.httpHeaderValue1"
+        valueFrom:
+          secretKeyRef:
+            name: "appmon-serviceaccount-api-token"
+            key: "token"
+    instanceSelector:
+      matchLabels:
+        dashboards: "${GRAFANA_INSTANCE_NAME}"
+    allowCrossNamespaceImport: true
+    datasource:
+      access: proxy
+      editable: true
+      isDefault: false
+      jsonData:
+        httpMethod: GET
+        httpHeaderName1: Authorization
+        timeInterval: 5s
+        tlsSkipVerify: true
+        customQueryParameters: "namespace=${TARGET_NAMESPACE}"
+      name: Prometheus-${TARGET_NAMESPACE}
+      secureJsonData:
+        httpHeaderValue1: >-
+          Bearer ${token}
+      type: prometheus
+      url: 'https://${THANOS_URL}'
+parameters:
+- name: MONITORING_NAMESPACE
+  displayName: Type the Namespace "name"
+  description: Namespace "name" where all the resources of AppMon will be deployed
+  required: true
+  value: dedalus-monitoring
+- name: GRAFANA_INSTANCE_NAME
+  displayName: Type a name for the Grafana Instance
+  description: This value will be also used to attacch the Dashboards and Datasources created by this template to the instance
+  required: true
+  value: appmon-oauth-tenancy
+- name: THANOS_URL
+  displayName: Prometheus URL
+  description: Type the Prometheus URL you can use the service on port 9091 or 9092
+  required: true
+  value: thanos-querier.openshift-monitoring.svc.cluster.local:9092
+- name: TARGET_NAMESPACE
+  displayName: Openshift namespace for the custom query
+  description: Type the namespace where to limit the datasource
+  required: true
+  value:
