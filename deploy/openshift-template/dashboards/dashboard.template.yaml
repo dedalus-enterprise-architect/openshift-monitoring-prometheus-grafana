@@ -6,7 +6,7 @@ metadata:
   annotations:
     description: |-
       Grafana dashboard definition about the JVM.
-      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/master/README.md.
+      For more information about using this template, including OpenShift considerations, see https://github.com/dedalus-enterprise-architect/grafana-resources/blob/main/README.md.
     iconClass: icon-d4center
     tags: dedalus-grafana,dedalus
   name: dedalus-grafana
@@ -27,7 +27,7 @@ objects:
       matchLabels:
         dashboards: "${GRAFANA_INSTANCE_NAME}"
     folder: "Dedalus Dashboards"
-    url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/master/deploy/dashboards/grafana_dashboard_advanced_selectable.json
+    url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/main/deploy/openshift-template/dashboards/grafana_dashboard_advanced_selectable.json
 parameters:
 - name: MONITORING_NAMESPACE
   displayName: Type the Namespace "name"

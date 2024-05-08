@@ -2,7 +2,7 @@ kind: GrafanaDashboard
 apiVersion: grafana.integreatly.org/v1beta1
 metadata:
   namespace: placeholder
-  name: jvm-dashboard-basic
+  name: jvm-dashboard-advanced
   labels:
     app: appmon-dedalus
 spec:
