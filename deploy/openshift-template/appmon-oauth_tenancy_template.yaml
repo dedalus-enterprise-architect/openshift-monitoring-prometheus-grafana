@@ -136,6 +136,41 @@ objects:
     - grafanafolders/status
     verbs:
     - get
+- kind: ClusterRole
+  apiVersion: rbac.authorization.k8s.io/v1 
+  metadata:
+    name: aggregate-grafana-editor
+    labels:
+      rbac.authorization.k8s.io/aggregate-to-admin: "true" 
+      rbac.authorization.k8s.io/aggregate-to-edit: "true" 
+  rules:
+  - apiGroups:
+    - grafana.integreatly.org
+    resources:
+    - grafanas
+    - grafanadashboards
+    - grafanadatasources
+    - grafanafolders
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - grafana.integreatly.org
+    resources:
+    - grafanas/status
+    - grafanadashboards/status
+    - grafanadatasources/status
+    - grafanafolders/status
+    verbs:
+    - get
+    - list
+    - watch
+    - create
+    - update
+    - patch
+    - delete
+    - deletecollection
 - kind: Grafana
   apiVersion: grafana.integreatly.org/v1beta1
   metadata:
@@ -4633,4 +4668,3 @@ parameters:
   displayName: Openshift namespace for the custom query
   description: Type the namespace where to limit the datasource
   required: true
-  value:
