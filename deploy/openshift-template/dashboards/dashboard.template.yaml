@@ -27,7 +27,7 @@ objects:
       matchLabels:
         dashboards: "${GRAFANA_INSTANCE_NAME}"
     folder: "Dedalus Dashboards"
-    url: https://raw.githubusercontent.com/dedalus-enterprise-architect/grafana-resources/main/deploy/openshift-template/dashboards/grafana_dashboard_advanced_selectable.json
+    url: https://raw.githubusercontent.com/dedalus-enterprise-architect/openshift-monitoring-prometheus-grafana/refs/heads/main/deploy/openshift-template/dashboards/grafana_dashboard_advanced_selectable.json
 parameters:
 - name: MONITORING_NAMESPACE
   displayName: Type the Namespace "name"
