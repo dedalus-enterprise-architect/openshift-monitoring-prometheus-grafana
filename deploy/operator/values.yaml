@@ -4,7 +4,6 @@ watchNamespaces: ""
 image:
   repository: "ghcr.io/grafana-operator/grafana-operator"
   pullPolicy: IfNotPresent
-  tag: "v5.17.0"
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "appmon"

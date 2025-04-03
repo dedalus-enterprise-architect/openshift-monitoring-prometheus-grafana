@@ -1,4 +1,4 @@
-# OpenShift AppMon Resources
+# Application monitoring on OpenShift with Grafana
 <!-- markdownlint-disable MD004 MD034 -->
 AppMon is a set of resources that use Grafana Operator and the embedded Prometheus engine in OpenShift to visualize metrics published by running applications.
 This project collects some procedures on how to setup a custom AppMon instance based on the following software versions:
@@ -9,6 +9,7 @@ This project collects some procedures on how to setup a custom AppMon instance b
 References:
 
 * <https://github.com/grafana-operator/grafana-operator>
+* <https://grafana.github.io/grafana-operator/docs/installation/helm/>
 
 ## Index
 
@@ -51,9 +52,8 @@ If you are going to change the content of values.yaml rememeber to reflect the c
 Clone this repository at the right realease on your client:
 
 ```bash
-git clone https://github.com/dedalus-enterprise-architect/grafana-resources.git
+git clone --branch 5.17.0 https://github.com/dedalus-enterprise-architect/grafana-resources.git
 cd grafana-resources/
-git checkout tags/v2.0.0
 ```
 
 ### 2.2 Install the Grafana Operator using its Helm chart
@@ -70,25 +70,12 @@ KUBE_TOKEN=$(oc whoami -t)
 KUBE_APISERVER=$(oc whoami --show-server=true)
 ```
 
-deploy the Grafana Operator:
+Deploy the Grafana Operator:
 
 ```bash
-helm upgrade -i grafana-operator oci://ghcr.io/grafana-operator/helm-charts/grafana-operator --version v5.4.1 --values grafana-resources/deploy/operator/values.yaml -n $MONITORING_NAMESPACE --create-namespace --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
+helm upgrade -i grafana-operator oci://ghcr.io/grafana/helm-charts/grafana-operator --version v5.17.0 --values deploy/operator/values.yaml -n $MONITORING_NAMESPACE --create-namespace --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
 ```
 
-then the output should be:
-
-```bash
-Release "grafana-operator" does not exist. Installing it now.
-Pulled: ghcr.io/grafana-operator/helm-charts/grafana-operator:v5.4.1
-Digest: sha256:584c94257f6df505f9fd4f8dd5b6f6c27536d99a49bb6e6ff89da65bf462bdda
-NAME: grafana-operator
-LAST DEPLOYED: Mon Nov 13 16:25:29 2023
-NAMESPACE: dedalus-monitoring
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-```
 
 to check the installation you can also run this command:
 
@@ -96,15 +83,8 @@ to check the installation you can also run this command:
 helm list -n ${MONITORING_NAMESPACE} --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
 ```
 
-you should get the following output:
-
-```bash
-NAME                    NAMESPACE               REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
-grafana-operator        dedalus-monitoring      1               2023-11-13 16:25:29.160445089 +0100 CET deployed        grafana-operator-v5.4.1 v5.4.1
-```
-
 You have successfully installed the Grafana Operator.
 Proceed to the next section to complete the AppMon deployment.
 
-## 3. Deploy methods
-[- OpenShift Template](/deploy/openshift-template/README.md)
+## 3. Deploy Grafana instance
+[- Using OpenShift Template](/deploy/openshift-template/README.md)
