@@ -4,10 +4,12 @@ watchNamespaces: ""
 image:
   repository: "ghcr.io/grafana-operator/grafana-operator"
   pullPolicy: IfNotPresent
-  tag: ""
+  tag: "v5.17.0"
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "appmon"
+
+isOpenshift: true  # Add this line to specify if the deployment is on OpenShift
 
 serviceAccount:
   create: true

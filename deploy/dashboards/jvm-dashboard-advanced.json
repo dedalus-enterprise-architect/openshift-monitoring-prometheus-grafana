@@ -1,0 +1,37 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "limit": 100,
+        "name": "Annotations & Alerts",
+        "showIn": 0,
+        "type": "dashboard"
+      },
+      {
+        "datasource": "${datasource}",
+        "enable": true,
+        "expr": "resets(process_uptime_seconds{app=\"$application\", instance=\"$instance\"}[1m]) > 0",
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "name": "Restart Detection",
+        "showIn": 0,
+        "step": "1m",
+        "tagKeys": "restart-tag",
+        "textFormat": "uptime reset",
+        "titleFormat": "Restart"
+      }
+    ]
+  },
+  "description": "Dashboard for Micrometer instrumented applications (Java, Spring Boot, Micronaut)",
+  "editable": true,
+  "gnetId": 4701,
+  "graphTooltip": 1,
+  "id": 15,
+  "iteration": 1675712718058,
+  "links": [],
+  // ... rest of the dashboard JSON ...
+}
