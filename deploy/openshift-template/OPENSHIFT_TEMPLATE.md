@@ -111,6 +111,12 @@ appmon-oauth-querier-route   appmon-oauth-querier-route-dedalus-monitoring.apps.
 `{GRAFANA_INSTANCE_NAME}-admin-credentials`.
 The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
 
+### 2.4 Create the Dashboard ConfigMap from the dashboard JSON code file
+
+```bash
+oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json
+```
+
 ## Other Templates
 
 How you can check there are other templates ready for other scenario

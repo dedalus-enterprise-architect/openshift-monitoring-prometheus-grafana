@@ -357,8 +357,9 @@ objects:
     instanceSelector:
       matchLabels:
         dashboards: "${GRAFANA_INSTANCE_NAME}"
-    json: >-
-      {{ include "deploy/dashboards/jvm-dashboard-advanced.json" . | indent 8 }}
+    configMapRef:
+      name: jvm-dashboard-advanced-configmap
+      key: jvm-dashboard-advanced.json
 parameters:
 - name: MONITORING_NAMESPACE
   displayName: AppMon namespace
