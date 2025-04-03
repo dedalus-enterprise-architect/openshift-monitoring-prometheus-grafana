@@ -108,14 +108,8 @@ grafana-operator        dedalus-monitoring      1               2023-11-13 16:25
 You have successfully installed the Grafana Operator.
 Proceed to the next section to complete the AppMon deployment.
 
-## 3. AppMon resources
-
-For now the only way to deploy in a declarative way all the _AppMon_ resources is using the Openshift Templates.
-For a detailed procedure please read [here](/deploy/openshift-template/OPENSHIFT_TEMPLATE.md)
-
-### Supported Deploy Method
-
-[- Openshift Template](/deploy/openshift-template/OPENSHIFT_TEMPLATE.md)
+## 3. Deploy methods
+[- OpenShift Template](/deploy/openshift-template/README.md)
 
 ## Updating from version 4.2.0 to 5.4.1
 
