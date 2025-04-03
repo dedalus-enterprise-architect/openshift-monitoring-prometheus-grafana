@@ -3,8 +3,8 @@
 AppMon is a set of resources that use Grafana Operator and the embedded Prometheus engine in OpenShift to visualize metrics published by running applications.
 This project collects some procedures on how to setup a custom AppMon instance based on the following software versions:
 
-* Grafana Operator - Community Edition - version 5.4.1
-* OpenShift/OKD 4.12 or higher
+* Grafana Operator - Community Edition - version 5.17
+* OpenShift/OKD 4.15 or higher
 
 References:
 
@@ -12,8 +12,6 @@ References:
 
 ## Index
 
-- [OpenShift AppMon Resources](#openshift-appmon-resources)
-  - [Index](#index)
   - [1. Prerequisites](#1-prerequisites)
   - [2. Grafana Operator](#2-grafana-operator)
     - [2.1 Clone the repo](#21-clone-the-repo)
