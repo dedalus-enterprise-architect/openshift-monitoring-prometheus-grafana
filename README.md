@@ -13,52 +13,44 @@ References:
 
 ## Index
 
-  - [1. Prerequisites](#1-prerequisites)
-  - [2. Grafana Operator](#2-grafana-operator)
-    - [2.1 Clone the repo](#21-clone-the-repo)
-    - [2.2 Install the Grafana Operator using its Helm chart](#22-install-the-grafana-operator-using-its-helm-chart)
-  - [3. AppMon resources](#3-appmon-resources)
-    - [Supported Deploy Method](#supported-deploy-method)
-  - [Updating from version 4.2.0 to 5.4.1](#updating-from-version-420-to-541)
-    - [Check for the old resources](#check-for-the-old-resources)
-    - [Deleting the resources](#deleting-the-resources)
+<!-- TOC -->
+
+- [Application monitoring on OpenShift with Grafana](#application-monitoring-on-openshift-with-grafana)
+    - [Index](#index)
+    - [Prerequisites](#prerequisites)
+    - [Deploy Grafana Operator](#deploy-grafana-operator)
+        - [Clone the repository](#clone-the-repository)
+        - [Install the Grafana Operator using its Helm chart](#install-the-grafana-operator-using-its-helm-chart)
+    - [Deploy Grafana instance](#deploy-grafana-instance)
+
+<!-- /TOC -->
 
 ## 1. Prerequisites
 
-On your client
+On your Linux client
 
 * OpenShift client utility: ```oc```
 * Helm client utility v3.11 or higher: ```helm```
-* OpenShift cluster admin privileges
-* Access to Grafana Operator image repository `ghcr.io/grafana-operator/grafana-operator`
 
 On OpenShift
 
-* at least one namespace (ex. _dedalus-app_) with a running application exposing metrics should exists
-* one namespace to host AppMon components (ex. _dedalus-monitoring_)
-* a Prometheus instance configured to scrape metrics from user workloads
+* Cluster admin privileges
+* Access to GitHub Container Registry `ghcr.io`
+* at least one running application exposing metrics
+* at least a Prometheus instance configured to scrape metrics from user workloads
 
-## 2. Grafana Operator
+## 2. Deploy Grafana Operator
 
-References:
+### 2.1 Clone the repository
 
-* https://grafana-operator.github.io/grafana-operator/docs/installation/helm/
-
-The deploy will follow the official procedure using a values.yaml provided by this project.
-If you are going to change the content of values.yaml rememeber to reflect the changes that you made in the other resources.
-
-### 2.1 Clone the repo
-
-Clone this repository at the right realease on your client:
+Clone this repository on your client:
 
 ```bash
-git clone --branch 5.17.0 https://github.com/dedalus-enterprise-architect/grafana-resources.git
-cd grafana-resources/
+git clone --branch 5.17.0 https://github.com/dedalus-enterprise-architect/openshift-monitoring-prometheus-grafana.git
+cd openshift-monitoring-prometheus-grafana/
 ```
 
 ### 2.2 Install the Grafana Operator using its Helm chart
-
-> WARNING: an Admin Cluster Role is required to proceed on this section.
 
 Before proceeding you must be logged in to the OpenShift API server via `oc login` client command.
 
@@ -73,18 +65,21 @@ KUBE_APISERVER=$(oc whoami --show-server=true)
 Deploy the Grafana Operator:
 
 ```bash
-helm upgrade -i grafana-operator oci://ghcr.io/grafana/helm-charts/grafana-operator --version v5.17.0 --values deploy/operator/values.yaml -n $MONITORING_NAMESPACE --create-namespace --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
+helm upgrade -i grafana-operator oci://ghcr.io/grafana/helm-charts/grafana-operator \
+--version v5.17.0 \ 
+--values deploy/operator/values.yaml \
+-n $MONITORING_NAMESPACE --create-namespace \
+--kube-apiserver ${KUBE_APISERVER} \
+--kube-token ${KUBE_TOKEN}
 ```
 
-
-to check the installation you can also run this command:
+To check the installation you can also run this command:
 
 ```bash
-helm list -n ${MONITORING_NAMESPACE} --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
+helm list -n ${MONITORING_NAMESPACE} \
+--kube-apiserver ${KUBE_APISERVER} \
+--kube-token ${KUBE_TOKEN}
 ```
-
-You have successfully installed the Grafana Operator.
-Proceed to the next section to complete the AppMon deployment.
 
 ## 3. Deploy Grafana instance
 - [Using OpenShift Template](/deploy/openshift-template/README.md)

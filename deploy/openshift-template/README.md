@@ -1,49 +1,36 @@
-# Openshift Template
-<!-- markdownlint-disable MD004 -->
-
-Here will be explained how to complete the deploy of Appmon resources using Openshift Templates declarative deploy.
-
 ## Index
 
-  - [1. Prerequisites](#1-prerequisites)
-  - [2. Procedure](#2-procedure)
-    - [2.1 Process the template](#21-process-the-template)
-      - [2.1.1 Template Parameters](#211-template-parameters)
-    - [2.2 Create the Dashboard ConfigMap]
-    - [2.3 Connect to the route](#23-connect-to-the-route)
-  - [Other Templates](#other-templates)
+<!-- TOC -->
+
+- [Index](#index)
+- [Templates available](#templates-available)
+- [Template Parameters](#template-parameters)
+- [Deploy Grafana instance](#deploy-grafana-instance)
+    - [Process the template](#process-the-template)
+    - [Create the Dashboard ConfigMap](#create-the-dashboard-configmap)
+    - [Connect to Grafana Web UI](#connect-to-grafana-web-ui)
+- [Notes](#notes)
     - [Difference between Basic vs. OAuth](#difference-between-basic-vs-oauth)
     - [Querier vs. Tenancy](#querier-vs-tenancy)
 
-## 1. Prerequisites
+<!-- /TOC -->
 
-Check the prerequisites on the main [README.md](/README.md)
+## Templates available
 
-## 2. Procedure
-
-> WARNING: an Admin Cluster Role is required to proceed on this section.
-
-To install AppMon resources following Dedalus Best-Practice follow these steps:
-
-### 2.1 Process the template
-
-Set the following variables to the target environment:
+These are all the templates provided in this project
 
 ```bash
-MONITORING_NAMESPACE=dedalus-monitoring
-STORAGE_CLASS=mystorageclass
+deploy/openshift-template/
+├── appmon-basic_querier_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Querier Datasource
+├── appmon-basic_tenancy_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Tenancy Datasource
+├── appmon-oauth_querier_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Querier Datasource (Dedalus Best-Practice)
+└── appmon-oauth_tenancy_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Tenancy Datasource
 ```
 
-Deploy the template via `oc process` client command:
+You can use the template that better suits your needs.
+Check out the parameters accepted by the template before using it.
 
-```bash
-oc process -f deploy/openshift-template/appmon-oauth_querier_template.yaml \
--p MONITORING_NAMESPACE=$MONITORING_NAMESPACE \
--p STORAGECLASS=$STORAGE_CLASS \
-| oc apply -f -
-```
-
-#### 2.1.1 Template Parameters
+## Template Parameters
 
 The following is a list of the accepted template parameters and their default values:
 
@@ -75,22 +62,42 @@ parameters:
   required: true
 ```
 
-### 2.2 Create the Dashboard ConfigMap
+## 1 Deploy Grafana instance
+
+Following there are the instructions to deploy
+`appmon-oauth_querier_template.yaml`
+
+### 1.1 Process the template
+
+Set the following variables on your client:
 
 ```bash
-oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json -n $MONITORING_NAMESPACE
+MONITORING_NAMESPACE=dedalus-monitoring
+STORAGE_CLASS=myclusterstorageclass
 ```
 
-### 2.3 Connect to the route
+Deploy the template via `oc process` client command:
+
+```bash
+oc process -f deploy/openshift-template/appmon-oauth_querier_template.yaml \
+-p MONITORING_NAMESPACE=$MONITORING_NAMESPACE \
+-p STORAGECLASS=$STORAGE_CLASS \
+| oc apply -f -
+```
+
+### 1.2 Create the Dashboard ConfigMap
+
+```bash
+oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json \
+-n $MONITORING_NAMESPACE
+```
+
+### 1.3 Connect to Grafana Web UI
 
 Get the OpenShift routes where the services are exposed:
 
 ```bash
 oc get route -n $MONITORING_NAMESPACE
-NAME                         HOST/PORT                                                                                   PATH   SERVICES
-   PORT      TERMINATION     WILDCARD
-appmon-oauth-querier-admin   appmon-oauth-querier-admin-dedalus-monitoring.apps.rubber-cluster.rubberworld.dedalus.aws          appmon-oauth-querier-service   grafana   edge/Redirect   None
-appmon-oauth-querier-route   appmon-oauth-querier-route-dedalus-monitoring.apps.rubber-cluster.rubberworld.dedalus.aws          appmon-oauth-querier-service   https     reencrypt       None
 
 ```
 
@@ -98,22 +105,7 @@ appmon-oauth-querier-route   appmon-oauth-querier-route-dedalus-monitoring.apps.
 `{GRAFANA_INSTANCE_NAME}-admin-credentials`.
 The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
 
-
-## Other Templates
-
-These are all the templates available covering other possible scenarios
-
-```bash
-deploy/openshift-template/
-├── appmon-basic_querier_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Querier Datasource
-├── appmon-basic_tenancy_template.yaml #Ephemeral Storage, Basic Authentication, Thanos Tenancy Datasource
-├── appmon-oauth_querier_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Querier Datasource (Dedalus Best-Practice)
-└── appmon-oauth_tenancy_template.yaml #Persistent Storage, OAuth Proxy Authentication, Thanos Tenancy Datasource
-```
-
-You can use the template that better suits your needs.
-Check out the parameters accepted by the template before using it.
-
+## Notes
 
 ### Difference between Basic vs. OAuth
 
