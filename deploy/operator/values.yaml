@@ -12,6 +12,9 @@ serviceAccount:
   annotations: {}
   name: "appmon-serviceaccount"
 
+rbac:
+  create: true
+
 metricsService:
   type: ClusterIP
   metricsPort: 9090
