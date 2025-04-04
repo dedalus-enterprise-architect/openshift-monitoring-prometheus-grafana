@@ -1,9 +1,6 @@
 namespaceScope: false
 leaderElect: false
 watchNamespaces: ""
-image:
-  repository: "ghcr.io/grafana-operator/grafana-operator"
-  pullPolicy: IfNotPresent
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "appmon"
