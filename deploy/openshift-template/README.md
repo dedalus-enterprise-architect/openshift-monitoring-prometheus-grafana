@@ -42,7 +42,7 @@ oc process -f deploy/openshift-template/appmon-oauth_querier_template.yaml \
 | oc apply -f -
 ```
 
-### 2.2 Template Parameters
+#### 2.1.1 Template Parameters
 
 The following is a list of the accepted template parameters and their default values:
 
@@ -74,6 +74,12 @@ parameters:
   required: true
 ```
 
+### 2.2 Create the Dashboard ConfigMap from the dashboard JSON code file
+
+```bash
+oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json -n $MONITORING_NAMESPACE
+```
+
 ### 2.3 Connect to the route
 
 Get the OpenShift routes where the services are exposed:
@@ -91,11 +97,6 @@ appmon-oauth-querier-route   appmon-oauth-querier-route-dedalus-monitoring.apps.
 `{GRAFANA_INSTANCE_NAME}-admin-credentials`.
 The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
 
-### 2.4 Create the Dashboard ConfigMap from the dashboard JSON code file
-
-```bash
-oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json -n $MONITORING_NAMESPACE
-```
 
 ## Other Templates
 
