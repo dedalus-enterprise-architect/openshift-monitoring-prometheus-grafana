@@ -5,7 +5,7 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "appmon"
 
-isOpenshift: true
+isOpenShift: true
 
 serviceAccount:
   create: true
