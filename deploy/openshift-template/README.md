@@ -8,7 +8,8 @@ Here will be explained how to complete the deploy of Appmon resources using Open
   - [1. Prerequisites](#1-prerequisites)
   - [2. Procedure](#2-procedure)
     - [2.1 Process the template](#21-process-the-template)
-    - [2.2 Template Parameters](#22-template-parameters)
+      - [2.1.1 Template Parameters](#22-template-parameters)
+    - [2.2 Create the Dashboard ConfigMap]
     - [2.3 Connect to the route](#23-connect-to-the-route)
   - [Other Templates](#other-templates)
     - [Difference between Basic vs. OAuth](#difference-between-basic-vs-oauth)
@@ -74,7 +75,7 @@ parameters:
   required: true
 ```
 
-### 2.2 Create the Dashboard ConfigMap from the dashboard JSON code file
+### 2.2 Create the Dashboard ConfigMap
 
 ```bash
 oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json -n $MONITORING_NAMESPACE
