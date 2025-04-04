@@ -8,7 +8,7 @@ Here will be explained how to complete the deploy of Appmon resources using Open
   - [1. Prerequisites](#1-prerequisites)
   - [2. Procedure](#2-procedure)
     - [2.1 Process the template](#21-process-the-template)
-      - [2.1.1 Template Parameters](#22-template-parameters)
+      - [2.1.1 Template Parameters](#211-template-parameters)
     - [2.2 Create the Dashboard ConfigMap]
     - [2.3 Connect to the route](#23-connect-to-the-route)
   - [Other Templates](#other-templates)
