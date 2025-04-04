@@ -5,7 +5,7 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "appmon"
 
-isOpenshift: true  # Add this line to specify if the deployment is on OpenShift
+isOpenshift: true
 
 serviceAccount:
   create: true
