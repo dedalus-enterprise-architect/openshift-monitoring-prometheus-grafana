@@ -87,4 +87,4 @@ You have successfully installed the Grafana Operator.
 Proceed to the next section to complete the AppMon deployment.
 
 ## 3. Deploy Grafana instance
-[- Using OpenShift Template](/deploy/openshift-template/README.md)
+- [Using OpenShift Template](/deploy/openshift-template/README.md)
