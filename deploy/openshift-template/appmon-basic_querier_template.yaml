@@ -138,21 +138,6 @@ objects:
         disable_signout_menu: "false"
       auth.basic:
         enabled: "true"
-- kind: GrafanaDashboard
-  apiVersion: grafana.integreatly.org/v1beta1
-  metadata:
-    name: jvm-advanced-metrics
-    namespace: ${MONITORING_NAMESPACE}
-    labels:
-      app: appmon-dedalus
-      dashboards: "${GRAFANA_INSTANCE_NAME}"
-  spec:
-    instanceSelector:
-      matchLabels:
-        dashboards: "${GRAFANA_INSTANCE_NAME}"
-    configMapRef:
-      name: jvm-dashboard-advanced-configmap
-      key: jvm-dashboard-advanced.json
 parameters:
 - name: MONITORING_NAMESPACE
   displayName: Type the Namespace "name"

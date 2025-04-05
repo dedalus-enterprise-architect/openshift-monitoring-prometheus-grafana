@@ -83,3 +83,51 @@ helm list -n ${MONITORING_NAMESPACE} \
 
 ## 3. Deploy Grafana instance
 - [Using OpenShift Template](/deploy/openshift-template/README.md)
+
+### 3.1 Create the Dashboard ConfigMap
+
+```bash
+oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json \
+-n $MONITORING_NAMESPACE
+```
+
+### 3.2 Create the GrafanaDashboard resource
+
+Create a YAML file for the `GrafanaDashboard` resource, for example `jvm-advanced-metrics.yaml`:
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: jvm-advanced-metrics
+  namespace: $MONITORING_NAMESPACE
+  labels:
+    app: appmon-dedalus
+    dashboards: "${GRAFANA_INSTANCE_NAME}"
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: "${GRAFANA_INSTANCE_NAME}"
+  configMapRef:
+    name: jvm-dashboard-advanced-configmap
+    key: jvm-dashboard-advanced.json
+```
+
+Apply the `GrafanaDashboard` resource:
+
+```bash
+oc apply -f jvm-advanced-metrics.yaml
+```
+
+### 3.3 Connect to Grafana Web UI
+
+Get the OpenShift routes where the services are exposed:
+
+```bash
+oc get route -n $MONITORING_NAMESPACE
+
+```
+
+> The `*-admin` route won't use the _OAuth Proxy_ for authentication, but instead will require the admin credentials provided in this secret
+`{GRAFANA_INSTANCE_NAME}-admin-credentials`.
+The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
