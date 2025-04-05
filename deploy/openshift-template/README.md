@@ -85,11 +85,6 @@ oc process -f deploy/openshift-template/appmon-oauth_querier_template.yaml \
 | oc apply -f -
 ```
 
-### 1.2 Create the Dashboard ConfigMap
-
-```bash
-oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json \
--n $MONITORING_NAMESPACE
 ```
 
 ### 1.3 Connect to Grafana Web UI

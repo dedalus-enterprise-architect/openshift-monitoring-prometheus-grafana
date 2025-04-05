@@ -84,22 +84,26 @@ helm list -n ${MONITORING_NAMESPACE} \
 ## 3. Deploy Grafana instance
 - [Using OpenShift Template](/deploy/openshift-template/README.md)
 
-### 3.1 Create the Dashboard ConfigMap
+## 4. Add dashboards to Grafana
+
+Dashboard in JSON format can be added with the following steps
+1. creating a ConfigMap from the dashboard json file
+2. creating a GrafanaDashboard resource referencing the ConfigMap
+
+Example:
 
 ```bash
-oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json \
+oc create configmap jvm-metrics-dashboard-configmap --from-file=dashboards/jvm-dashboard-advanced.json \
 -n $MONITORING_NAMESPACE
 ```
 
-### 3.2 Create the GrafanaDashboard resource
-
-Create a YAML file for the `GrafanaDashboard` resource, for example `jvm-advanced-metrics.yaml`:
+Create a YAML file for the `GrafanaDashboard` resource, for example `jvm-metrics-gd.yaml`:
 
 ```yaml
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: jvm-advanced-metrics
+  name: jvm-metrics-gd
   namespace: $MONITORING_NAMESPACE
   labels:
     app: appmon-dedalus
@@ -109,7 +113,7 @@ spec:
     matchLabels:
       dashboards: "${GRAFANA_INSTANCE_NAME}"
   configMapRef:
-    name: jvm-dashboard-advanced-configmap
+    name: jvm-metrics-dashboard-configmap
     key: jvm-dashboard-advanced.json
 ```
 
@@ -119,13 +123,12 @@ Apply the `GrafanaDashboard` resource:
 oc apply -f jvm-advanced-metrics.yaml
 ```
 
-### 3.3 Connect to Grafana Web UI
+### 5. Connect to Grafana Web UI
 
 Get the OpenShift routes where the services are exposed:
 
 ```bash
 oc get route -n $MONITORING_NAMESPACE
-
 ```
 
 > The `*-admin` route won't use the _OAuth Proxy_ for authentication, but instead will require the admin credentials provided in this secret
