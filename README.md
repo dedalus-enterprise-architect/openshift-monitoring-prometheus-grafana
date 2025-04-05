@@ -120,7 +120,7 @@ spec:
 Apply the `GrafanaDashboard` resource:
 
 ```bash
-oc apply -f jvm-advanced-metrics.yaml
+oc apply -f jvm-metrics-gd.yaml
 ```
 
 ### 5. Connect to Grafana Web UI
