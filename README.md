@@ -8,7 +8,7 @@ This project collects some procedures on how to setup a custom AppMon instance b
 
 References:
 
-* <https://github.com/grafana-operator/grafana-operator>
+* <https://github.com/grafana/grafana-operator>
 * <https://grafana.github.io/grafana-operator/docs/installation/helm/>
 
 ## Index
