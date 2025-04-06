@@ -22,6 +22,14 @@ References:
         - [Clone the repository](#clone-the-repository)
         - [Install the Grafana Operator using its Helm chart](#install-the-grafana-operator-using-its-helm-chart)
     - [Deploy Grafana instance](#deploy-grafana-instance)
+    - [Add dashboards to Grafana](#add-dashboards-to-grafana)
+        - [Connect to Grafana Web UI](#connect-to-grafana-web-ui)
+    - [Uninstall the solution](#uninstall-the-solution)
+        - [Set environment variables](#set-environment-variables)
+        - [Remove Grafana Dashboards](#remove-grafana-dashboards)
+        - [Remove Grafana Instance](#remove-grafana-instance)
+        - [Uninstall Grafana Operator](#uninstall-grafana-operator)
+        - [Clean up namespace optional](#clean-up-namespace-optional)
 
 <!-- /TOC -->
 
@@ -140,3 +148,56 @@ oc get route -n $MONITORING_NAMESPACE
 > The `*-admin` route won't use the _OAuth Proxy_ for authentication, but instead will require the admin credentials provided in this secret
 `{GRAFANA_INSTANCE_NAME}-admin-credentials`.
 The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
+
+## 6. Uninstall the solution
+
+To completely remove the Grafana monitoring solution from your OpenShift cluster, follow these steps:
+
+### 6.1 Set environment variables
+
+```bash
+MONITORING_NAMESPACE=dedalus-monitoring
+KUBE_TOKEN=$(oc whoami -t)
+KUBE_APISERVER=$(oc whoami --show-server=true)
+GRAFANA_INSTANCE_NAME=$(oc get grafana -n $MONITORING_NAMESPACE -o jsonpath='{.items[0].metadata.name}')
+```
+
+### 6.2 Remove Grafana Dashboards
+
+First, remove all GrafanaDashboard resources:
+
+```bash
+oc delete grafanadashboard --all -n $MONITORING_NAMESPACE
+```
+
+Remove any dashboard ConfigMaps:
+
+```bash
+oc delete configmap -l app=appmon-dedalus -n $MONITORING_NAMESPACE
+```
+
+### 6.3 Remove Grafana Instance
+
+Delete the Grafana instance:
+
+```bash
+oc delete grafana $GRAFANA_INSTANCE_NAME -n $MONITORING_NAMESPACE
+```
+
+### 6.4 Uninstall Grafana Operator
+
+Uninstall the Grafana Operator using Helm:
+
+```bash
+helm uninstall grafana-operator -n $MONITORING_NAMESPACE \
+--kube-apiserver ${KUBE_APISERVER} \
+--kube-token ${KUBE_TOKEN}
+```
+
+### 6.5 Clean up namespace (optional)
+
+If you want to completely remove the namespace:
+
+```bash
+oc delete namespace $MONITORING_NAMESPACE
+```
