@@ -2,7 +2,6 @@
 
 <!-- TOC -->
 
-- [Index](#index)
 - [Templates available](#templates-available)
 - [Template Parameters](#template-parameters)
 - [Process the template](#process-the-template)
