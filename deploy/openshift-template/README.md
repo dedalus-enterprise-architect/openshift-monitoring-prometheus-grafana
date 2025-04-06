@@ -5,10 +5,7 @@
 - [Index](#index)
 - [Templates available](#templates-available)
 - [Template Parameters](#template-parameters)
-- [Deploy Grafana instance](#deploy-grafana-instance)
-    - [Process the template](#process-the-template)
-    - [Create the Dashboard ConfigMap](#create-the-dashboard-configmap)
-    - [Connect to Grafana Web UI](#connect-to-grafana-web-ui)
+- [Process the template](#process-the-template)
 - [Notes](#notes)
     - [Difference between Basic vs. OAuth](#difference-between-basic-vs-oauth)
     - [Querier vs. Tenancy](#querier-vs-tenancy)
@@ -62,12 +59,10 @@ parameters:
   required: true
 ```
 
-## 1 Deploy Grafana instance
+## Process the template 
 
 Following there are the instructions to deploy
 `appmon-oauth_querier_template.yaml`
-
-### 1.1 Process the template
 
 Set the following variables on your client:
 
