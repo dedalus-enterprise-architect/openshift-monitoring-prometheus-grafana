@@ -176,7 +176,15 @@ Remove any dashboard ConfigMaps:
 oc delete configmap -l app=appmon-dedalus -n $MONITORING_NAMESPACE
 ```
 
-### 6.3 Remove Grafana Instance
+### 6.3 Remove Grafana Dashboards
+
+Remove all GrafanaDatasource resources:
+
+```bash
+oc delete grafanadatasource --all -n $MONITORING_NAMESPACE
+```
+
+### 6.4 Remove Grafana Instance
 
 Delete the Grafana instance:
 
@@ -184,7 +192,7 @@ Delete the Grafana instance:
 oc delete grafana $GRAFANA_INSTANCE_NAME -n $MONITORING_NAMESPACE
 ```
 
-### 6.4 Uninstall Grafana Operator
+### 6.5 Uninstall Grafana Operator
 
 Uninstall the Grafana Operator using Helm:
 
@@ -194,7 +202,7 @@ helm uninstall grafana-operator -n $MONITORING_NAMESPACE \
 --kube-token ${KUBE_TOKEN}
 ```
 
-### 6.5 Clean up project (optional)
+### 6.6 Clean up project (optional)
 
 If you want to completely remove the namespace:
 
