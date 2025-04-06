@@ -112,7 +112,7 @@ GRAFANA_INSTANCE_NAME=$(oc get grafana -n $MONITORING_NAMESPACE -o jsonpath='{.i
 ```
 
 ```yaml
-cat << 'EOF' > jvm-metrics-gd.yaml
+cat << EOF > jvm-metrics-gd.yaml
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
