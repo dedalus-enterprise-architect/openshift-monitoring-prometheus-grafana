@@ -85,21 +85,6 @@ oc process -f deploy/openshift-template/appmon-oauth_querier_template.yaml \
 | oc apply -f -
 ```
 
-```
-
-### 1.3 Connect to Grafana Web UI
-
-Get the OpenShift routes where the services are exposed:
-
-```bash
-oc get route -n $MONITORING_NAMESPACE
-
-```
-
-> The `*-admin` route won't use the _OAuth Proxy_ for authentication, but instead will require the admin credentials provided in this secret
-`{GRAFANA_INSTANCE_NAME}-admin-credentials`.
-The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
-
 ## Notes
 
 ### Difference between Basic vs. OAuth
