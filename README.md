@@ -100,6 +100,7 @@ oc create configmap jvm-metrics-dashboard-configmap --from-file=dashboards/jvm-d
 Create a YAML file for the `GrafanaDashboard` resource, for example `jvm-metrics-gd.yaml`:
 
 ```yaml
+cat << 'EOF' > jvm-metrics-gd.yaml
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -115,6 +116,7 @@ spec:
   configMapRef:
     name: jvm-metrics-dashboard-configmap
     key: jvm-dashboard-advanced.json
+EOF
 ```
 
 Apply the `GrafanaDashboard` resource:
