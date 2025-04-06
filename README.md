@@ -108,7 +108,7 @@ oc create configmap jvm-metrics-dashboard-configmap --from-file=dashboards/jvm-d
 Create a YAML file for the `GrafanaDashboard` resource, for example `jvm-metrics-gd.yaml`:
 
 ```bash
-GRAFANA_INSTANCE_NAME=oc get grafana -n $MONITORING_NAMESPACE -o jsonpath='{.items[0].metadata.name}'
+GRAFANA_INSTANCE_NAME=$(oc get grafana -n $MONITORING_NAMESPACE -o jsonpath='{.items[0].metadata.name}')
 ```
 
 ```yaml
