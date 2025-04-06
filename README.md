@@ -194,10 +194,10 @@ helm uninstall grafana-operator -n $MONITORING_NAMESPACE \
 --kube-token ${KUBE_TOKEN}
 ```
 
-### 6.5 Clean up namespace (optional)
+### 6.5 Clean up project (optional)
 
 If you want to completely remove the namespace:
 
 ```bash
-oc delete namespace $MONITORING_NAMESPACE
+oc delete project $MONITORING_NAMESPACE
 ```
