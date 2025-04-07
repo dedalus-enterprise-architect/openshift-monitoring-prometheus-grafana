@@ -2,13 +2,9 @@
 
 <!-- TOC -->
 
-- [Index](#index)
 - [Templates available](#templates-available)
 - [Template Parameters](#template-parameters)
-- [Deploy Grafana instance](#deploy-grafana-instance)
-    - [Process the template](#process-the-template)
-    - [Create the Dashboard ConfigMap](#create-the-dashboard-configmap)
-    - [Connect to Grafana Web UI](#connect-to-grafana-web-ui)
+- [Process the template](#process-the-template)
 - [Notes](#notes)
     - [Difference between Basic vs. OAuth](#difference-between-basic-vs-oauth)
     - [Querier vs. Tenancy](#querier-vs-tenancy)
@@ -62,12 +58,10 @@ parameters:
   required: true
 ```
 
-## 1 Deploy Grafana instance
+## Process the template 
 
 Following there are the instructions to deploy
 `appmon-oauth_querier_template.yaml`
-
-### 1.1 Process the template
 
 Set the following variables on your client:
 
@@ -84,26 +78,6 @@ oc process -f deploy/openshift-template/appmon-oauth_querier_template.yaml \
 -p STORAGECLASS=$STORAGE_CLASS \
 | oc apply -f -
 ```
-
-### 1.2 Create the Dashboard ConfigMap
-
-```bash
-oc create configmap jvm-dashboard-advanced-configmap --from-file=deploy/dashboards/jvm-dashboard-advanced.json \
--n $MONITORING_NAMESPACE
-```
-
-### 1.3 Connect to Grafana Web UI
-
-Get the OpenShift routes where the services are exposed:
-
-```bash
-oc get route -n $MONITORING_NAMESPACE
-
-```
-
-> The `*-admin` route won't use the _OAuth Proxy_ for authentication, but instead will require the admin credentials provided in this secret
-`{GRAFANA_INSTANCE_NAME}-admin-credentials`.
-The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
 
 ## Notes
 
