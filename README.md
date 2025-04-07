@@ -95,8 +95,8 @@ helm list -n ${MONITORING_NAMESPACE} \
 ## 4. Add dashboards to Grafana
 
 Dashboard in JSON format can be added with the following steps
-1. creating a ConfigMap from the dashboard json file
-2. creating a GrafanaDashboard resource referencing the ConfigMap
+1. create a ConfigMap from the dashboard json file
+2. create a GrafanaDashboard resource referencing the ConfigMap
 
 Example:
 
