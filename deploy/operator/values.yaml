@@ -1,18 +1,19 @@
 namespaceScope: false
 leaderElect: false
 watchNamespaces: ""
-image:
-  repository: "ghcr.io/grafana-operator/grafana-operator"
-  pullPolicy: IfNotPresent
-  tag: ""
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "appmon"
+
+isOpenShift: true
 
 serviceAccount:
   create: true
   annotations: {}
   name: "appmon-serviceaccount"
+
+rbac:
+  create: true
 
 metricsService:
   type: ClusterIP

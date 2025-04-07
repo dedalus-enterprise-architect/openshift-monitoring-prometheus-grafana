@@ -1,66 +1,64 @@
-# OpenShift AppMon Resources
+# Application monitoring on OpenShift with Grafana
 <!-- markdownlint-disable MD004 MD034 -->
 AppMon is a set of resources that use Grafana Operator and the embedded Prometheus engine in OpenShift to visualize metrics published by running applications.
 This project collects some procedures on how to setup a custom AppMon instance based on the following software versions:
 
-* Grafana Operator - Community Edition - version 5.4.1
-* OpenShift/OKD 4.12 or higher
+* Grafana Operator - Community Edition - version 5.17
+* OpenShift/OKD 4.15 or higher
 
 References:
 
-* <https://github.com/grafana-operator/grafana-operator>
+* <https://github.com/grafana/grafana-operator>
+* <https://grafana.github.io/grafana-operator/docs/installation/helm/>
 
 ## Index
 
-- [OpenShift AppMon Resources](#openshift-appmon-resources)
-  - [Index](#index)
-  - [1. Prerequisites](#1-prerequisites)
-  - [2. Grafana Operator](#2-grafana-operator)
-    - [2.1 Clone the repo](#21-clone-the-repo)
-    - [2.2 Install the Grafana Operator using its Helm chart](#22-install-the-grafana-operator-using-its-helm-chart)
-  - [3. AppMon resources](#3-appmon-resources)
-    - [Supported Deploy Method](#supported-deploy-method)
-  - [Updating from version 4.2.0 to 5.4.1](#updating-from-version-420-to-541)
-    - [Check for the old resources](#check-for-the-old-resources)
-    - [Deleting the resources](#deleting-the-resources)
+<!-- TOC -->
+
+- [Application monitoring on OpenShift with Grafana](#application-monitoring-on-openshift-with-grafana)
+    - [Index](#index)
+    - [Prerequisites](#prerequisites)
+    - [Deploy Grafana Operator](#deploy-grafana-operator)
+        - [Clone the repository](#clone-the-repository)
+        - [Install the Grafana Operator using its Helm chart](#install-the-grafana-operator-using-its-helm-chart)
+    - [Deploy Grafana instance](#deploy-grafana-instance)
+    - [Add dashboards to Grafana](#add-dashboards-to-grafana)
+        - [Connect to Grafana Web UI](#connect-to-grafana-web-ui)
+    - [Uninstall the solution](#uninstall-the-solution)
+        - [Set environment variables](#set-environment-variables)
+        - [Remove Grafana Dashboards](#remove-grafana-dashboards)
+        - [Remove Grafana Instance](#remove-grafana-instance)
+        - [Uninstall Grafana Operator](#uninstall-grafana-operator)
+        - [Clean up namespace optional](#clean-up-namespace-optional)
+
+<!-- /TOC -->
 
 ## 1. Prerequisites
 
-On your client
+On your Linux client
 
 * OpenShift client utility: ```oc```
 * Helm client utility v3.11 or higher: ```helm```
-* OpenShift cluster admin privileges
-* Access to Grafana Operator image repository `ghcr.io/grafana-operator/grafana-operator`
 
 On OpenShift
 
-* at least one namespace (ex. _dedalus-app_) with a running application exposing metrics should exists
-* one namespace to host AppMon components (ex. _dedalus-monitoring_)
-* a Prometheus instance configured to scrape metrics from user workloads
+* Cluster admin privileges
+* Access to GitHub Container Registry `ghcr.io`
+* at least one running application exposing metrics
+* at least a Prometheus instance configured to scrape metrics from user workloads
 
-## 2. Grafana Operator
+## 2. Deploy Grafana Operator
 
-References:
+### 2.1 Clone the repository
 
-* https://grafana-operator.github.io/grafana-operator/docs/installation/helm/
-
-The deploy will follow the official procedure using a values.yaml provided by this project.
-If you are going to change the content of values.yaml rememeber to reflect the changes that you made in the other resources.
-
-### 2.1 Clone the repo
-
-Clone this repository at the right realease on your client:
+Clone this repository on your client:
 
 ```bash
-git clone https://github.com/dedalus-enterprise-architect/grafana-resources.git
-cd grafana-resources/
-git checkout tags/v2.0.0
+git clone --branch v5.17.0 https://github.com/dedalus-enterprise-architect/openshift-monitoring-prometheus-grafana.git
+cd openshift-monitoring-prometheus-grafana/
 ```
 
 ### 2.2 Install the Grafana Operator using its Helm chart
-
-> WARNING: an Admin Cluster Role is required to proceed on this section.
 
 Before proceeding you must be logged in to the OpenShift API server via `oc login` client command.
 
@@ -72,140 +70,144 @@ KUBE_TOKEN=$(oc whoami -t)
 KUBE_APISERVER=$(oc whoami --show-server=true)
 ```
 
-deploy the Grafana Operator:
+Deploy the Grafana Operator:
 
 ```bash
-helm upgrade -i grafana-operator oci://ghcr.io/grafana-operator/helm-charts/grafana-operator --version v5.4.1 --values grafana-resources/deploy/operator/values.yaml -n $MONITORING_NAMESPACE --create-namespace --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
+helm upgrade -i grafana-operator oci://ghcr.io/grafana/helm-charts/grafana-operator \
+--version v5.17.0 \ 
+--values deploy/operator/values.yaml \
+-n $MONITORING_NAMESPACE --create-namespace \
+--kube-apiserver ${KUBE_APISERVER} \
+--kube-token ${KUBE_TOKEN}
 ```
 
-then the output should be:
+To check the installation you can also run this command:
 
 ```bash
-Release "grafana-operator" does not exist. Installing it now.
-Pulled: ghcr.io/grafana-operator/helm-charts/grafana-operator:v5.4.1
-Digest: sha256:584c94257f6df505f9fd4f8dd5b6f6c27536d99a49bb6e6ff89da65bf462bdda
-NAME: grafana-operator
-LAST DEPLOYED: Mon Nov 13 16:25:29 2023
-NAMESPACE: dedalus-monitoring
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
+helm list -n ${MONITORING_NAMESPACE} \
+--kube-apiserver ${KUBE_APISERVER} \
+--kube-token ${KUBE_TOKEN}
 ```
 
-to check the installation you can also run this command:
+## 3. Deploy Grafana instance
+- [Using OpenShift Template](/deploy/openshift-template/README.md)
+
+## 4. Add dashboards to Grafana
+
+Available dashboards are described [here](/dashboards/README.md).
+
+Dashboard in JSON format can be added with the following steps:
+1. create a ConfigMap from the dashboard json file
+2. create a GrafanaDashboard resource referencing the ConfigMap
+
+Example:
 
 ```bash
-helm list -n ${MONITORING_NAMESPACE} --kube-apiserver ${KUBE_APISERVER} --kube-token ${KUBE_TOKEN}
+oc create configmap jvm-metrics-dashboard-configmap --from-file=dashboards/jvm-dashboard-advanced.json \
+-n $MONITORING_NAMESPACE
 ```
 
-you should get the following output:
+Create a YAML file for the `GrafanaDashboard` resource, for example `jvm-metrics-gd.yaml`:
 
 ```bash
-NAME                    NAMESPACE               REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
-grafana-operator        dedalus-monitoring      1               2023-11-13 16:25:29.160445089 +0100 CET deployed        grafana-operator-v5.4.1 v5.4.1
+GRAFANA_INSTANCE_NAME=$(oc get grafana -n $MONITORING_NAMESPACE -o jsonpath='{.items[0].metadata.name}')
 ```
 
-You have successfully installed the Grafana Operator.
-Proceed to the next section to complete the AppMon deployment.
+```yaml
+cat << EOF > jvm-metrics-gd.yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: jvm-metrics-gd
+  namespace: $MONITORING_NAMESPACE
+  labels:
+    app: appmon-dedalus
+    dashboards: "${GRAFANA_INSTANCE_NAME}"
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: "${GRAFANA_INSTANCE_NAME}"
+  configMapRef:
+    name: jvm-metrics-dashboard-configmap
+    key: jvm-dashboard-advanced.json
+EOF
+```
 
-## 3. AppMon resources
-
-For now the only way to deploy in a declarative way all the _AppMon_ resources is using the Openshift Templates.
-For a detailed procedure please read [here](/deploy/openshift-template/OPENSHIFT_TEMPLATE.md)
-
-### Supported Deploy Method
-
-[- Openshift Template](/deploy/openshift-template/OPENSHIFT_TEMPLATE.md)
-
-## Updating from version 4.2.0 to 5.4.1
-
-If you have to update from version 4.2.0 installed using this procedure [here](https://github.com/dedalus-enterprise-architect/grafana-resources/blob/main/README.md)
-
-Or if you are planning to update the OpenShift cluster the best action to take is removing the old 4.2.0
-
-Here is how to proceed:
-
-### Check for the old resources
-
-you can use this command to list all the resources related to the label `app: grafana-dedalus`
+Apply the `GrafanaDashboard` resource:
 
 ```bash
- oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null
+oc apply -f jvm-metrics-gd.yaml
 ```
 
-Here is a sample output:
+### 5. Connect to Grafana Web UI
+
+Get the OpenShift routes where the services are exposed:
 
 ```bash
-KIND                    NAME                                      NAMESPACE
-Status                  <none>                                    <none>
-ClusterRole             grafana-proxy-dedalus-monitoring          <none>
-ClusterRoleBinding      grafana-proxy-dedalus-monitoring          <none>
-ClusterRoleBinding      grafana-cluster-monitoring-view-binding   <none>
-ClusterRoleBinding      grafana-proxy-dedalus-monitoring          <none>
-ClusterRole             grafana-proxy-dedalus-monitoring          <none>
-ClusterRoleBinding      grafana-cluster-monitoring-view-binding   <none>
-ConfigMap               grafana-oauth-certs                       dedalus-monitoring
-GrafanaDataSource       prometheus-grafana-ds                     dedalus-monitoring
-Grafana                 grafana-persistent-oauth                  dedalus-monitoring
-OperatorGroup           grafana-operator-group                    dedalus-monitoring
-Subscription            grafana-operator                          dedalus-monitoring
-GrafanaDashboard        jvm-dashboard-basic                       dedalus-monitoring
-GrafanaDashboard        jvm-dashboard                             dedalus-monitoring
-Secret                  grafana-proxy                             dedalus-monitoring
-PersistentVolumeClaim   grafana-pvc                               dedalus-monitoring
-Route                   grafana-persistent-oauth-access           dedalus-monitoring
-Route                   grafana-persistent-oauth-admin            dedalus-monitoring
+oc get route -n $MONITORING_NAMESPACE
 ```
 
-### Deleting the resources
+> The `*-admin` route won't use the _OAuth Proxy_ for authentication, but instead will require the admin credentials provided in this secret
+`{GRAFANA_INSTANCE_NAME}-admin-credentials`.
+The `*-route` one will use the _OAuth Proxy_ but grants only a read-only access.
 
-Now you can start deleting the resource releted to the Grafana _CRD_.
-You can use your list and delete the resource using the oc client or you can use the following command to speed up the process,
-remember to check your list of resources.
+## 6. Uninstall the solution
+
+To completely remove the Grafana monitoring solution from your OpenShift cluster, follow these steps:
+
+### 6.1 Set environment variables
 
 ```bash
- for resource in $(oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null | awk '{ print $1","$2","$3 }' | grep "Grafana" | sort -r) ; do oc delete $(echo $resource | awk -F, '{ print $1" "$2" -n "$3 }'); done
-grafanadatasource.integreatly.org "prometheus-grafana-ds" deleted
-grafanadashboard.integreatly.org "jvm-dashboard-basic" deleted
-grafanadashboard.integreatly.org "jvm-dashboard" deleted
-grafana.integreatly.org "grafana-persistent-oauth" deleted
+MONITORING_NAMESPACE=dedalus-monitoring
+KUBE_TOKEN=$(oc whoami -t)
+KUBE_APISERVER=$(oc whoami --show-server=true)
+GRAFANA_INSTANCE_NAME=$(oc get grafana -n $MONITORING_NAMESPACE -o jsonpath='{.items[0].metadata.name}')
 ```
 
-then proceed deleting the rbac created:
+### 6.2 Remove Grafana Dashboards
+
+First, remove all GrafanaDashboard resources:
 
 ```bash
- for resource in $(oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null | awk '{ print $1","$2","$3 }' | grep "Role" | sort -ur) ; do oc delete $(echo $resource | awk -F, '{ print $1" "$2 }'); done
-clusterrolebinding.rbac.authorization.k8s.io "grafana-proxy-dedalus-monitoring" deleted
-clusterrolebinding.rbac.authorization.k8s.io "grafana-cluster-monitoring-view-binding" deleted
-clusterrole.rbac.authorization.k8s.io "grafana-proxy-dedalus-monitoring" deleted
+oc delete grafanadashboard --all -n $MONITORING_NAMESPACE
 ```
 
-after that continue deleting the operator resources:
+Remove any dashboard ConfigMaps:
 
 ```bash
-for resource in $(oc get $(oc api-resources --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') --ignore-not-found --all-namespaces -o=custom-columns=KIND:.kind,NAME:.metadata.name,NAMESPACE:.metadata.namespace --sort-by='metadata.namespace' -l app=grafana-dedalus 2>/dev/null | awk '{ print $1","$2","$3 }' | grep -E 'Operator|Subscription' | sort -r) ; do oc delete $(echo $resource | awk -F, '{ print $1" "$2 }'); done
-subscription.operators.coreos.com "grafana-operator" deleted
-operatorgroup.operators.coreos.com "grafana-operator-group" deleted
+oc delete configmap -l app=appmon-dedalus -n $MONITORING_NAMESPACE
 ```
 
-and the namespace:
+### 6.3 Remove Grafana Dashboards
+
+Remove all GrafanaDatasource resources:
 
 ```bash
-oc delete namespace dedalus-monitoring
-namespace "dedalus-monitoring" deleted
+oc delete grafanadatasource --all -n $MONITORING_NAMESPACE
 ```
 
-At this point if you run the command to [check the resources](#check-for-the-old-resources) it should give you an empty list,
-but there are few resources with no labels that we need to take care of so,
+### 6.4 Remove Grafana Instance
 
-issue this command to get rid of the _CRD_ created by the operator:
+Delete the Grafana instance:
 
 ```bash
-for crd in $(oc get crd | grep grafana | awk '{ print $1 }'); do oc delete crd $crd ; done
-customresourcedefinition.apiextensions.k8s.io "grafanadashboards.integreatly.org" deleted
-customresourcedefinition.apiextensions.k8s.io "grafanadatasources.integreatly.org" deleted
-customresourcedefinition.apiextensions.k8s.io "grafananotificationchannels.integreatly.org" deleted
-customresourcedefinition.apiextensions.k8s.io "grafanas.integreatly.org" deleted
+oc delete grafana $GRAFANA_INSTANCE_NAME -n $MONITORING_NAMESPACE
 ```
 
-Now that you have a clean environment you can install the [new version](#1-prerequisites)
+### 6.5 Uninstall Grafana Operator
+
+Uninstall the Grafana Operator using Helm:
+
+```bash
+helm uninstall grafana-operator -n $MONITORING_NAMESPACE \
+--kube-apiserver ${KUBE_APISERVER} \
+--kube-token ${KUBE_TOKEN}
+```
+
+### 6.6 Clean up project (optional)
+
+If you want to completely remove the namespace:
+
+```bash
+oc delete project $MONITORING_NAMESPACE
+```
