@@ -51,10 +51,9 @@ On OpenShift
 
 ### 2.1 Clone the repository
 
-Clone this repository on your client:
+Clone this repository on your client, then:
 
 ```bash
-git clone --branch v5.17.0 https://github.com/dedalus-enterprise-architect/openshift-monitoring-prometheus-grafana.git
 cd openshift-monitoring-prometheus-grafana/
 ```
 
